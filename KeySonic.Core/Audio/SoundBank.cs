@@ -22,6 +22,8 @@ public sealed class SoundBank
 
     public static readonly WaveFormat EngineFormat = WaveFormat.CreateIeeeFloatWaveFormat(44100, 2);
 
+    public int LoadedDefaultSoundCount => _defaultVariations.Count;
+
     public void LoadFromFolder(string folderPath)
     {
         if (!System.IO.Directory.Exists(folderPath))

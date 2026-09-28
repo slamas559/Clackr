@@ -34,8 +34,6 @@ hook.HookError += (_, ex) =>
 
 hook.KeyDown += (_, e) =>
 {
-    if (e.IsRepeat) return; // ignore OS auto-repeat; only sound the initial press
-
     var receivedAt = stopwatch.Elapsed;
 
     var sound = soundBank.PickSound(e.Key);

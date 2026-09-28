@@ -6,7 +6,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWindowsForms>false</UseWindowsForms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Platforms>x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>

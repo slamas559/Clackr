@@ -1,0 +1,89 @@
+<UserControl x:Class="KeySonic.UI.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <StackPanel Margin="28,8,28,28">
+
+        <TextBlock Text="Make every keystroke sound better." Style="{StaticResource SubText}" Margin="2,0,0,22"/>
+
+        <!-- Active sound card -->
+        <TextBlock Text="ACTIVE SOUND" Style="{StaticResource SectionLabel}"/>
+        <Border Style="{StaticResource Card}" Margin="0,0,0,20">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Width="48" Height="48" CornerRadius="10" Background="{StaticResource AccentBrush}">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Rectangle Width="3" Height="12" Fill="White" RadiusX="1.5" RadiusY="1.5" Margin="1.5,0" Opacity="0.9"/>
+                            <Rectangle Width="3" Height="22" Fill="White" RadiusX="1.5" RadiusY="1.5" Margin="1.5,0" Opacity="0.9"/>
+                            <Rectangle Width="3" Height="16" Fill="White" RadiusX="1.5" RadiusY="1.5" Margin="1.5,0" Opacity="0.9"/>
+                            <Rectangle Width="3" Height="26" Fill="White" RadiusX="1.5" RadiusY="1.5" Margin="1.5,0" Opacity="0.9"/>
+                            <Rectangle Width="3" Height="14" Fill="White" RadiusX="1.5" RadiusY="1.5" Margin="1.5,0" Opacity="0.9"/>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                        <TextBlock x:Name="ActiveSoundNameText" Text="—" FontSize="16" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="ActiveSoundSubText" Text="—" Style="{StaticResource SubText}"/>
+                    </StackPanel>
+                </Grid>
+
+                <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
+                    <Button x:Name="PreviewButton" Style="{StaticResource GhostButton}" Margin="0,0,10,0" Click="PreviewButton_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="Preview" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="ChangeSoundButton" Content="Change" Style="{StaticResource PrimaryButton}" Click="ChangeSoundButton_Click"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Volume -->
+        <Grid Margin="2,0,2,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="VOLUME" Style="{StaticResource SectionLabel}" Margin="0"/>
+            <TextBlock Grid.Column="1" x:Name="VolumeValueText" Text="70%" Style="{StaticResource SubText}"/>
+        </Grid>
+        <Slider x:Name="VolumeSliderControl" Style="{StaticResource VolumeSlider}" Value="70"
+                ValueChanged="VolumeSliderControl_ValueChanged" Margin="2,0,2,22"/>
+
+        <!-- Keyboard sounds toggle -->
+        <Border Style="{StaticResource Card}" Margin="0,0,0,20">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                    <TextBlock Text="Keyboard Sounds" FontSize="14" FontWeight="SemiBold"/>
+                    <TextBlock Text="Plays a sound for every keystroke, system-wide" Style="{StaticResource SubText}" TextWrapping="Wrap"/>
+                </StackPanel>
+                <ToggleButton x:Name="EnabledToggle" Grid.Column="1" Style="{StaticResource ToggleSwitch}"
+                              Checked="EnabledToggle_Changed" Unchecked="EnabledToggle_Changed"
+                              VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- Status -->
+        <Border Style="{StaticResource Card}">
+            <StackPanel Orientation="Horizontal">
+                <Ellipse x:Name="StatusDot" Width="9" Height="9" Fill="{StaticResource SuccessBrush}" VerticalAlignment="Center"/>
+                <TextBlock x:Name="StatusText" Text="Active - listening for keystrokes" Margin="10,0,0,0"
+                           FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <TextBlock Text="KeySonic does not record or transmit what you type." Style="{StaticResource SubText}"
+                   TextWrapping="Wrap" Margin="2,20,2,0" FontStyle="Italic"/>
+
+    </StackPanel>
+</UserControl>

@@ -1,11 +1,12 @@
-C:\Users\AbdulSalam\KeySonic\KeySonic.Core\bin\Debug\net10.0-windows\KeySonic.Core.deps.json
-C:\Users\AbdulSalam\KeySonic\KeySonic.Core\bin\Debug\net10.0-windows\KeySonic.Core.dll
-C:\Users\AbdulSalam\KeySonic\KeySonic.Core\bin\Debug\net10.0-windows\KeySonic.Core.pdb
 C:\Users\AbdulSalam\KeySonic\KeySonic.Core\obj\Debug\net10.0-windows\KeySonic.Core.csproj.AssemblyReference.cache
 C:\Users\AbdulSalam\KeySonic\KeySonic.Core\obj\Debug\net10.0-windows\KeySonic.Core.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\AbdulSalam\KeySonic\KeySonic.Core\obj\Debug\net10.0-windows\KeySonic.Core.AssemblyInfoInputs.cache
 C:\Users\AbdulSalam\KeySonic\KeySonic.Core\obj\Debug\net10.0-windows\KeySonic.Core.AssemblyInfo.cs
 C:\Users\AbdulSalam\KeySonic\KeySonic.Core\obj\Debug\net10.0-windows\KeySonic.Core.csproj.CoreCompileInputs.cache
+C:\Users\AbdulSalam\KeySonic\KeySonic.Core\obj\Debug\net10.0-windows\KeySonic.Core.sourcelink.json
+C:\Users\AbdulSalam\KeySonic\KeySonic.Core\bin\Debug\net10.0-windows\KeySonic.Core.deps.json
+C:\Users\AbdulSalam\KeySonic\KeySonic.Core\bin\Debug\net10.0-windows\KeySonic.Core.dll
+C:\Users\AbdulSalam\KeySonic\KeySonic.Core\bin\Debug\net10.0-windows\KeySonic.Core.pdb
 C:\Users\AbdulSalam\KeySonic\KeySonic.Core\obj\Debug\net10.0-windows\KeySonic.Core.dll
 C:\Users\AbdulSalam\KeySonic\KeySonic.Core\obj\Debug\net10.0-windows\refint\KeySonic.Core.dll
 C:\Users\AbdulSalam\KeySonic\KeySonic.Core\obj\Debug\net10.0-windows\KeySonic.Core.pdb

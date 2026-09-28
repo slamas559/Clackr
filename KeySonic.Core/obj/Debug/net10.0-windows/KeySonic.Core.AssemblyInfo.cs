@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("KeySonic.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+09b1d6cd09f116418e0a85aeaf17b8f51daf4308")]
 [assembly: System.Reflection.AssemblyProductAttribute("KeySonic.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("KeySonic.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
