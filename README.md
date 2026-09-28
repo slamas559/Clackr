@@ -1,244 +1,120 @@
-# KeySonic — Phase 1
+# KeySonic
 
-Global keyboard hook → normalized key → preloaded audio → low-latency overlapping
-playback. No UI, no sound-pack manifest, no tray, no settings. Just the core loop,
-proven with a console test harness.
+KeySonic is a Windows desktop app that plays keyboard sounds as you type. Choose
+a sound pack, adjust the volume, and enable or disable sounds from the app. It
+runs in the system tray when its window is closed.
 
-**Important:** this must be built and run on Windows. It uses `SetWindowsHookEx`
-and WASAPI, neither of which exist on Linux/macOS. If you're opening this on a
-different machine than the one you'll test on, copy the whole `KeySonic` folder
-over first.
-
-## 1. Prerequisites
+## Requirements
 
 - Windows 10 or 11
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- A couple of short `.wav` files to use as key sounds (see below)
+- .NET 10 SDK
 
-## 2. Add some sounds
+KeySonic uses Windows keyboard hooks, WPF, and Windows audio APIs, so it does not
+run on macOS or Linux.
 
-Put `.wav` files into the `sounds/` folder at the root of this project.
+## Run the app
 
-- Any file **not** named `space.wav`, `enter.wav`, or `backspace.wav` is treated
-  as a generic "default key" sound. Add 2–4 of these (e.g. `key1.wav`, `key2.wav`,
-  `key3.wav`) so you can hear the variation logic avoid back-to-back repeats.
-- `space.wav`, `enter.wav`, `backspace.wav` (if present) are used only for those
-  specific keys.
+From the repository folder:
 
-If you don't have mechanical keyboard samples handy, search "mechanical keyboard
-switch sound wav" for royalty-free sample packs, or record a handful of clicks
-yourself — for Phase 1 testing, quality doesn't matter, only that files exist.
-
-## 3. Build
-
-From the `KeySonic` folder:
-
-```
-dotnet build KeySonic.sln -c Debug
+```powershell
+dotnet run --project KeySonic.UI
 ```
 
-Or just open `KeySonic.sln` in Visual Studio 2022+ and build there.
+To build the full solution:
 
-## 4. Run
-
-```
-dotnet run --project KeySonic.TestHarness
+```powershell
+dotnet build KeySonic.sln
 ```
 
-You should see:
+The app starts with the first available sound pack, or restores the pack that
+was active last time. Use the dashboard to preview or change the pack and
+control volume and keyboard sounds. The Sound Packs page lists installed packs.
 
-```
-KeySonic Phase 1 test harness
-==============================
+Closing the window hides KeySonic in the system tray; it does not exit the app.
+Use **Exit** in the tray icon's menu to quit. In Settings, you can choose to
+start KeySonic with Windows or start minimized.
 
-Loading sounds from: ...\sounds
-Hook installed. Switch to any other window (Notepad, browser, etc.) and start typing.
-```
+## Sound packs
 
-Now **switch focus to Notepad, your browser, VS Code — anything** and type.
-The console will keep logging every key press with its dispatch latency, e.g.:
+The app loads packs from a `packs` folder next to the application. Each pack is
+a subfolder containing one or more `.wav` files. A `pack.json` file is optional;
+without one, the folder name is used as the pack name.
 
-```
-14:02:11.183  key=H          repeat=False  hook->playback dispatch: 0.041 ms
-14:02:11.246  key=E          repeat=False  hook->playback dispatch: 0.038 ms
-```
-
-Press `Ctrl+C` in the console to exit cleanly (this unhooks and stops the audio
-device properly — check there's no lingering `KeySonic.TestHarness.exe` process
-in Task Manager afterward, which would indicate a cleanup bug).
-
-## 5. What "dispatch latency" does and doesn't tell you
-
-The logged number is the time between the hook callback receiving the key and
-the sound being handed to the mixer — i.e. software overhead only. It does **not**
-include the WASAPI buffer (~20ms as configured) or the audio driver/speaker path,
-which you can't measure from inside the app. The real test is subjective: does it
-*feel* instant when you type normally? The dispatch number just tells you whether
-something has regressed (it should stay well under 1ms; if it jumps to tens of
-milliseconds, something is blocking the hook thread).
-
-## 6. Things to actually test before calling Phase 1 done
-
-- **Normal typing** in Notepad/browser/VS Code — sounds should feel simultaneous
-  with keypresses, and variation should be audible (not the same sample every time).
-- **Fast/sustained typing** (hold a key down, or bash the keyboard) — should not
-  crackle, lag, or crash. Watch Task Manager for runaway memory/CPU.
-- **Alt+Tab away and back**, lock/unlock the machine (Win+L), sleep/wake — the
-  hook should keep working afterward without restarting the app.
-- **Ctrl+C shutdown** — process should exit and the hook should be gone (typing
-  afterward should be silent, and no orphaned hook should linger).
-- **A window running as Administrator** (e.g. Task Manager) — you will likely
-  find KeySonic does NOT hear keystrokes typed there, because a non-elevated
-  process can't hook an elevated one. This is expected Windows behavior, not a
-  bug — flagging it now so it doesn't look broken later.
-
-## 7. Known gaps, on purpose (this is Phase 1, not the final app)
-
-- No sound-pack JSON/manifest system yet — sounds are just "whatever wav files
-  are in the folder."
-- No UI, no tray, no settings persistence, no volume slider — `MasterVolume` and
-  `Enabled` exist as properties on `AudioEngine` for you to wire up next.
-- No per-key custom sounds beyond space/enter/backspace — this is a `switch`
-  statement in `SoundBank.LoadFromFolder`, meant to be replaced by the real
-  sound-pack format in a later phase.
-- Antivirus may flag a raw global keyboard hook exe on first run — expected,
-  and worth planning for (code signing) before any real distribution.
-
-## Project layout
-
-```
-KeySonic/
-├── KeySonic.sln
-├── sounds/                          <- put your .wav files here
-├── KeySonic.Core/
-│   ├── Keyboard/
-│   │   ├── KeyCode.cs               normalized key enum
-│   │   ├── VirtualKeyMapper.cs      the ONLY place raw VK codes are referenced
-│   │   ├── KeyEventData.cs
-│   │   ├── NativeMethods.cs         P/Invoke declarations
-│   │   └── GlobalKeyboardHook.cs    the hook itself
-│   └── Audio/
-│       ├── CachedSound.cs           decode-once-into-memory
-│       ├── CachedSoundSampleProvider.cs   per-playback cursor, self-removing
-│       ├── SoundBank.cs             folder of wavs -> per-key sound picker
-│       └── AudioEngine.cs           persistent WASAPI stream + mixer
-└── KeySonic.TestHarness/
-    └── Program.cs                  wires it all together + latency logging
-```
-
-## Sound packs (new)
-
-KeySonic.UI no longer reads a flat `sounds/` folder - it now reads a `packs/`
-folder, where **each subfolder is its own sound pack**:
-
-```
+```text
 packs/
-├── Soft Pop/
-│   ├── pack.json
-│   ├── click1.wav
-│   ├── click2.wav
-│   └── click3.wav
-├── Sharp Click/
-│   └── ...
-└── Deep Thock/
-    └── ...
+└── My Keyboard/
+    ├── pack.json       # optional metadata
+    ├── click-1.wav
+    ├── click-2.wav
+    ├── space.wav       # optional dedicated space sound
+    ├── enter.wav       # optional dedicated Enter sound
+    └── backspace.wav   # optional dedicated Backspace sound
 ```
 
-Three small demo packs are included, generated from short synthesized clicks
-(pure sine bursts, not real mechanical keyboard recordings) purely so the pack
-browser has something real to show and switch between. Swap them for actual
-recorded samples before publishing anything - see the earlier README section
-on where to source real keyboard sounds.
+All WAV files other than `space.wav`, `enter.wav`, and `backspace.wav` are
+randomized default-key variations. The three named files are used for their
+respective keys when present. At least one usable default WAV file is required
+for a pack to load.
 
-`pack.json` is optional - a folder with no manifest still works and just gets
-named after its folder. When present, it looks like:
+Example `pack.json`:
 
 ```json
 {
-  "name": "Soft Pop",
-  "description": "Gentle, muted, quiet office-friendly clicks.",
-  "author": "KeySonic",
+  "name": "My Keyboard",
+  "description": "A short description of the sound pack.",
+  "author": "Your name",
   "version": "1.0.0"
 }
 ```
 
-Same special-file convention as before applies inside each pack folder:
-`space.wav`, `enter.wav`, `backspace.wav` get their own dedicated sound;
-everything else is pooled as the default "normal key" variations.
+To add a pack, create its folder under the app's `packs` directory and restart
+KeySonic. Open that directory from **Settings > Sound packs folder > Open**.
+The repository also includes sample packs under `packs/`.
 
-In the app, click **Change** on the Active Sound card to open the pack
-browser - Preview plays a sample without switching what's active; Use
-switches the pack that's actually playing while you type.
+## Convert a Mechvibes pack
 
-Note: `KeySonic.TestHarness` (the console app) is unchanged and still reads
-the old flat `sounds/` folder directly via `SoundBank` - it's a low-level dev
-tool for testing the hook/audio engine in isolation, not meant to reflect the
-final pack-based experience.
+`KeySonic.PackConverter` converts supported Mechvibes packs into KeySonic's WAV
+pack format. Pass the source folder containing `config.json` and a destination
+folder:
 
-## Settings (new)
-
-Settings now persist between launches (saved to `%AppData%\KeySonic\settings.json`):
-volume, keyboard-sounds on/off, and which pack was last active. Click the gear
-icon in the title bar for the Settings page - "Start with Windows" is real
-(writes to the current user's Registry Run key, no admin rights needed);
-"Start minimized" skips showing the window at launch. There's also an "Open"
-button that opens the packs folder directly in Explorer.
-
-The window now has two distinct close paths: the **minimize** button genuinely
-minimizes to the taskbar like any normal app, while the **X** button hides
-fully to the system tray (tray icon keeps running in the background) - only
-the tray menu's "Exit" actually quits.
-
-## Converting Mechvibes packs (new)
-
-`KeySonic.PackConverter` is a separate, standalone console tool (won't affect
-the main app if something about it needs fixing) that converts a downloaded
-Mechvibes pack into KeySonic's format:
-
-```
-dotnet run --project KeySonic.PackConverter -- "C:\path\to\mechvibes-pack" "C:\Users\AbdulSalam\KeySonic\packs\My New Pack"
+```powershell
+dotnet run --project KeySonic.PackConverter -- "C:\path\to\mechvibes-pack" "C:\path\to\KeySonic\packs\Converted Pack"
 ```
 
-The first argument is the folder you unzipped from Mechvibes (it should
-contain a `config.json`); the second is where to write the converted pack -
-point it straight at a new folder under your `packs\` directory and it's ready
-to use after restarting KeySonic.
+The converter supports sprite-style packs with a shared audio file and
+multi-file packs. It puts most key sounds into the default variation pool;
+space, Enter, and Backspace remain dedicated sounds. Check the output and test
+it in KeySonic before relying on a converted pack, as the converter may skip
+unsupported or missing source sounds.
 
-It handles both Mechvibes pack shapes: the common "sprite" format (one shared
-`.ogg` file sliced by timing data) and the less common "multi-file" format
-(a separate audio file per key). Every distinct key sound gets folded into
-one randomized pool (except space/enter/backspace, which stay dedicated) -
-that's a deliberate simplification to match KeySonic's current flat pack
-format, not a bug; true per-key sound mapping would be a bigger future
-upgrade to the pack system itself.
+## Test harness
 
-This tool hasn't been run against a real downloaded Mechvibes pack yet (built
-and reasoned through carefully against Mechvibes' actual source format, but
-untested end-to-end) - try it on one real pack first and report back exactly
-what happens, good or bad, before relying on it for more.
+The optional console harness exercises the keyboard hook and audio engine
+separately from the WPF app. It reads WAV files from the root `sounds/` folder
+by default, or from a folder supplied as its first argument:
 
-To add it to your solution: `dotnet sln add KeySonic.PackConverter\KeySonic.PackConverter.csproj`
-
-## Running the WPF app
-
-There's now a real UI: `KeySonic.UI`. In Visual Studio, set it as the startup
-project and press F5, or from the command line:
-
-```
-dotnet run --project KeySonic.UI
+```powershell
+dotnet run --project KeySonic.TestHarness
+dotnet run --project KeySonic.TestHarness -- "C:\path\to\wav-files"
 ```
 
-It shares the exact same `sounds/` folder and `KeySonic.Core` engine as the
-console harness - closing the window minimizes it to the system tray rather
-than quitting; use "Exit" from the tray icon's right-click menu to fully quit.
-Before publishing this anywhere, swap the placeholder tray icon
-(`System.Drawing.SystemIcons.Application` in `App.xaml.cs`) for a real
-`KeySonic.ico`.
+Switch to another application and type to test playback. Press `Ctrl+C` in the
+console to stop the harness. Its flat `sounds/` input is separate from the
+app's `packs/` format.
 
-## Next step after this works
+## Settings and privacy
 
-Once you've confirmed low-latency, non-blocking, overlapping playback works
-reliably across the scenarios in section 6, the next phase is the WPF shell
-(main window + tray icon) that just calls into this same `KeySonic.Core` —
-the hook and audio engine don't change at all for that; only a UI gets added
-on top. Don't rebuild this core when you get there.
+Settings are saved to `%AppData%\KeySonic\settings.json`. They include volume,
+keyboard-sound enablement, start-minimized preference, and the last active pack.
+
+KeySonic handles key events locally to trigger sounds. It does not record or
+transmit the text you type. A standard Windows integrity-level restriction
+applies: a non-elevated KeySonic process may not receive input from an
+administrator-elevated application.
+
+## Projects
+
+- `KeySonic.UI` - WPF desktop application
+- `KeySonic.Core` - keyboard hook, audio engine, settings, and sound packs
+- `KeySonic.PackConverter` - Mechvibes pack conversion utility
+- `KeySonic.TestHarness` - console harness for the hook and audio engine
