@@ -1,0 +1,13 @@
+C:\Users\AbdulSalam\KeySonic\KeySonic.Core\obj\profile-crash-validation\intermediate\KeySonic.Core.csproj.AssemblyReference.cache
+C:\Users\AbdulSalam\KeySonic\KeySonic.Core\obj\profile-crash-validation\intermediate\KeySonic.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\AbdulSalam\KeySonic\KeySonic.Core\obj\profile-crash-validation\intermediate\KeySonic.Core.AssemblyInfoInputs.cache
+C:\Users\AbdulSalam\KeySonic\KeySonic.Core\obj\profile-crash-validation\intermediate\KeySonic.Core.AssemblyInfo.cs
+C:\Users\AbdulSalam\KeySonic\KeySonic.Core\obj\profile-crash-validation\intermediate\KeySonic.Core.csproj.CoreCompileInputs.cache
+C:\Users\AbdulSalam\KeySonic\KeySonic.Core\obj\profile-crash-validation\intermediate\KeySonic.Core.sourcelink.json
+C:\Users\AbdulSalam\KeySonic\KeySonic.Core\obj\profile-crash-validation\intermediate\KeySonic.Core.dll
+C:\Users\AbdulSalam\KeySonic\KeySonic.Core\obj\profile-crash-validation\intermediate\refint\KeySonic.Core.dll
+C:\Users\AbdulSalam\KeySonic\KeySonic.Core\obj\profile-crash-validation\intermediate\KeySonic.Core.pdb
+C:\Users\AbdulSalam\KeySonic\KeySonic.Core\obj\profile-crash-validation\KeySonic.Core.deps.json
+C:\Users\AbdulSalam\KeySonic\KeySonic.Core\obj\profile-crash-validation\KeySonic.Core.dll
+C:\Users\AbdulSalam\KeySonic\KeySonic.Core\obj\profile-crash-validation\intermediate\ref\KeySonic.Core.dll
+C:\Users\AbdulSalam\KeySonic\KeySonic.Core\obj\profile-crash-validation\KeySonic.Core.pdb

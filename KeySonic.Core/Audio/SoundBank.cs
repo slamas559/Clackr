@@ -29,8 +29,9 @@ public sealed class SoundBank
         if (!System.IO.Directory.Exists(folderPath))
             throw new System.IO.DirectoryNotFoundException($"Sound folder not found: {folderPath}");
 
-        foreach (var file in System.IO.Directory.EnumerateFiles(folderPath, "*.wav"))
+        foreach (var file in System.IO.Directory.EnumerateFiles(folderPath))
         {
+            if (!AudioFileExtensions.IsSupported(file)) continue;
             var name = System.IO.Path.GetFileNameWithoutExtension(file).ToLowerInvariant();
             try
             {

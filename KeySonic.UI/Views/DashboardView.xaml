@@ -2,9 +2,62 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="28,8,28,28">
 
         <TextBlock Text="Make every keystroke sound better." Style="{StaticResource SubText}" Margin="2,0,0,22"/>
+
+        <Border x:Name="FirstProfileSetupPanel" Style="{StaticResource Card}" Margin="0,0,0,20" Visibility="Collapsed">
+            <StackPanel>
+                <TextBlock Text="Set up your sound profile" FontSize="15" FontWeight="SemiBold"/>
+                <TextBlock Text="Choose a keyboard pack, tune mouse clicks, then save both as one profile."
+                           Style="{StaticResource SubText}" TextWrapping="Wrap" Margin="0,4,0,12"/>
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="Choose keyboard pack" Style="{StaticResource PrimaryButton}"
+                            Margin="0,0,8,0" Click="ChangeSoundButton_Click"/>
+                    <Button Content="Set up mouse" Style="{StaticResource GhostButton}"
+                            Click="MouseSoundsButton_Click"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <TextBlock Text="SOUND PROFILE" Style="{StaticResource SectionLabel}"/>
+        <Border Style="{StaticResource Card}" Margin="0,0,0,20">
+            <StackPanel>
+                <TextBlock x:Name="ProfileStatusText" Text="Save a keyboard and mouse setup as a profile."
+                           Style="{StaticResource SubText}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.2*"/>
+                        <ColumnDefinition Width="1.2*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <ComboBox x:Name="ProfileCombo" Grid.Column="0" DisplayMemberPath="Name"
+                              SelectionChanged="ProfileCombo_SelectionChanged" Margin="0,0,8,0"
+                              ToolTip="Choose a profile to apply its keyboard and mouse sounds"/>
+                    <TextBox x:Name="ProfileNameTextBox" Grid.Column="1" Text="Everyday"
+                             Background="{StaticResource SurfaceBrush}" Foreground="{StaticResource TextPrimaryBrush}"
+                             BorderBrush="{StaticResource BorderBrush2}" BorderThickness="1"
+                             Padding="9,6" Margin="0,0,8,0" ToolTip="Name for the current sound setup"/>
+                    <Button Grid.Column="2" Content="Save current" Style="{StaticResource PrimaryButton}"
+                            Margin="0,0,8,0" Click="SaveProfile_Click"/>
+                    <Button Grid.Column="3" Content="Delete" Style="{StaticResource GhostButton}"
+                            Click="DeleteProfile_Click"/>
+                </Grid>
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <Button Content="Export profile" Style="{StaticResource GhostButton}" Margin="0,0,8,0"
+                            Click="ExportProfile_Click"/>
+                        <Button Content="Import profile" Style="{StaticResource GhostButton}"
+                            Click="ImportProfile_Click"/>
+                    </StackPanel>
+                <TextBlock Text="AUTOMATIC APP RULE (OPTIONAL)" Style="{StaticResource SectionLabel}" Margin="0,12,0,6"/>
+                <TextBox x:Name="TargetProcessNameTextBox" Text=""
+                         Background="{StaticResource SurfaceBrush}" Foreground="{StaticResource TextPrimaryBrush}"
+                         BorderBrush="{StaticResource BorderBrush2}" BorderThickness="1"
+                         Padding="9,6" ToolTip="Process name without .exe, for example code or notepad"/>
+            </StackPanel>
+        </Border>
 
         <!-- Active sound card -->
         <TextBlock Text="ACTIVE SOUND" Style="{StaticResource SectionLabel}"/>
@@ -73,6 +126,26 @@
             </Grid>
         </Border>
 
+        <Border Style="{StaticResource Card}" Margin="0,0,0,20">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                    <TextBlock Text="Mouse Click Sounds" FontSize="14" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="MouseSoundSummaryText" Text="Left: no sound · Right: no sound"
+                               Style="{StaticResource SubText}" TextWrapping="Wrap"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="Configure" Style="{StaticResource GhostButton}" Margin="0,0,12,0"
+                            Click="MouseSoundsButton_Click"/>
+                    <ToggleButton x:Name="MouseSoundsToggle" Style="{StaticResource ToggleSwitch}"
+                                  Checked="MouseSoundsToggle_Changed" Unchecked="MouseSoundsToggle_Changed"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
         <!-- Status -->
         <Border Style="{StaticResource Card}">
             <StackPanel Orientation="Horizontal">
@@ -82,8 +155,9 @@
             </StackPanel>
         </Border>
 
-        <TextBlock Text="KeySonic does not record or transmit what you type." Style="{StaticResource SubText}"
+        <TextBlock Text="Keyboard and mouse events stay on this device. Try the typing game in Sound Lab." Style="{StaticResource SubText}"
                    TextWrapping="Wrap" Margin="2,20,2,0" FontStyle="Italic"/>
 
     </StackPanel>
+    </ScrollViewer>
 </UserControl>

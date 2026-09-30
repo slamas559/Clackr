@@ -7,12 +7,19 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
-    <AssemblyName>KeySonic</AssemblyName>
+    <AssemblyName>Clackr</AssemblyName>
+    <AssemblyTitle>Clackr</AssemblyTitle>
+    <Product>Clackr</Product>
+    <ApplicationIcon>Assets\clackr.ico</ApplicationIcon>
     <RootNamespace>KeySonic.UI</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\KeySonic.Core\KeySonic.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\*.png" />
   </ItemGroup>
 
   <ItemGroup>

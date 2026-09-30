@@ -29,6 +29,11 @@ dotnet build KeySonic.sln
 The app starts with the first available sound pack, or restores the pack that
 was active last time. Use the dashboard to preview or change the pack and
 control volume and keyboard sounds. The Sound Packs page lists installed packs.
+Open **Sound Lab** to see physical key presses highlighted or start the typing
+game. The game colors typed characters in the prompt and only processes
+keystrokes while Sound Lab and the KeySonic window are active.
+Use **Mouse clicks** to assign and tune separate left- and right-click sounds.
+Save keyboard and mouse settings together as a sound profile from the dashboard.
 
 Closing the window hides KeySonic in the system tray; it does not exit the app.
 Use **Exit** in the tray icon's menu to quit. In Settings, you can choose to
@@ -36,8 +41,9 @@ start KeySonic with Windows or start minimized.
 
 ## Sound packs
 
-The app loads packs from a `packs` folder next to the application. Each pack is
-a subfolder containing one or more `.wav` files. A `pack.json` file is optional;
+The app loads bundled packs from a `packs` folder next to the application and
+user-imported packs from `%AppData%\KeySonic\packs`. Each pack is a subfolder
+containing one or more supported audio files. A `pack.json` file is optional;
 without one, the folder name is used as the pack name.
 
 ```text
@@ -51,10 +57,10 @@ packs/
     └── backspace.wav   # optional dedicated Backspace sound
 ```
 
-All WAV files other than `space.wav`, `enter.wav`, and `backspace.wav` are
+All supported audio files other than `space`, `enter`, and `backspace` are
 randomized default-key variations. The three named files are used for their
-respective keys when present. At least one usable default WAV file is required
-for a pack to load.
+respective keys when present. At least one usable default sound is required for
+a pack to load.
 
 Example `pack.json`:
 
@@ -63,19 +69,56 @@ Example `pack.json`:
   "name": "My Keyboard",
   "description": "A short description of the sound pack.",
   "author": "Your name",
+  "license": "CC BY 4.0",
   "version": "1.0.0"
 }
 ```
 
-To add a pack, create its folder under the app's `packs` directory and restart
-KeySonic. Open that directory from **Settings > Sound packs folder > Open**.
-The repository also includes sample packs under `packs/`.
+Add the license name or URL when known. The pack browser marks packs without a
+declared license; verify the original terms before redistributing pack audio.
+
+Open **Sound packs** and choose **Mechvibes folder** to import an unzipped pack
+containing `config.json` and its referenced audio. The imported folder keeps the
+selected source folder's name. Choose **Audio files** to turn selected WAV,
+MP3, OGG, AIFF, or AIF files into a new keyboard pack. Imports are written to
+`%AppData%\KeySonic\packs`, so they remain writable after installation. The
+repository also includes bundled sample packs under `packs/`.
+
+## Mouse click sounds
+
+Mouse click sounds are configured separately from keyboard sound packs. Choose
+one file each for the left and right mouse buttons, preview them, and adjust
+their volumes independently. WAV and MP3 files are supported. Physical clicks
+animate the matching side of the mouse diagram and play the assigned sound while
+mouse sounds are enabled.
+
+Use the **Mouse clicks** page or the **Mouse clicks** tab in the Sound Packs
+browser. **Open folder** opens the persistent library at
+`%AppData%\KeySonic\mouse-clicks`. Use **Add files** to copy downloads into the
+library, or add them to the folder directly and select **Refresh**. The visible
+list provides per-file preview and one-click left/right assignment. Selected
+sounds, enablement, and per-button volumes are saved in
+`%AppData%\KeySonic\settings.json`.
+
+## Sound profiles
+
+Save the current keyboard pack, keyboard volume and enablement, mouse sounds,
+and per-button mouse volumes as a named profile. Profiles can be exported and
+imported as `.ksprofile.json` files. The file stores settings and library paths,
+not audio; the referenced keyboard pack and mouse sounds must also be installed
+on the receiving device.
+
+For automatic switching, enter a profile's target process name on the dashboard
+(`code`, for example, not `code.exe`) and enable **Switch sound profiles
+automatically** in Settings. KeySonic checks the foreground application locally
+and applies a matching profile. Automatic switching is off by default.
 
 ## Convert a Mechvibes pack
 
-`KeySonic.PackConverter` converts supported Mechvibes packs into KeySonic's WAV
-pack format. Pass the source folder containing `config.json` and a destination
-folder:
+`KeySonic.PackConverter` remains available for command-line conversion. In the
+app, use **Sound packs > Mechvibes folder** to import directly without choosing
+an output folder. For the command line, pass the source folder containing
+`config.json` and a destination folder:
 
 ```powershell
 dotnet run --project KeySonic.PackConverter -- "C:\path\to\mechvibes-pack" "C:\path\to\KeySonic\packs\Converted Pack"
@@ -104,13 +147,17 @@ app's `packs/` format.
 
 ## Settings and privacy
 
-Settings are saved to `%AppData%\KeySonic\settings.json`. They include volume,
-keyboard-sound enablement, start-minimized preference, and the last active pack.
+Settings are saved to `%AppData%\KeySonic\settings.json`. They include sound
+levels, keyboard and mouse enablement, saved profiles, window dimensions,
+start-minimized preference, automatic profile switching, and the last active
+pack.
 
-KeySonic handles key events locally to trigger sounds. It does not record or
-transmit the text you type. A standard Windows integrity-level restriction
-applies: a non-elevated KeySonic process may not receive input from an
-administrator-elevated application.
+KeySonic observes keyboard and mouse events locally to trigger sounds; it does
+not record or transmit them. The typing game only processes keystrokes while
+Sound Lab and the KeySonic window are active. Game input stays in memory; it is
+not saved to disk or transmitted. A standard Windows integrity-level
+restriction applies: a non-elevated KeySonic process may not receive keyboard
+input from an administrator-elevated application.
 
 ## Projects
 

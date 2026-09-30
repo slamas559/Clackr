@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -6,13 +8,17 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using KeySonic.Core.Keyboard;
+using KeySonic.Core.Settings;
 using KeySonic.UI.Views;
 
 namespace KeySonic.UI;
 
 public partial class MainWindow : Window
 {
+    private sealed record NavigationEntry(System.Windows.Controls.UserControl View, string Title, Button ActiveNavigationButton);
     private const int WmNcHitTest = 0x0084;
+    private const int WmGetMinMaxInfo = 0x0024;
+    private const uint MonitorDefaultToNearest = 0x00000002;
     private const int HtLeft = 10;
     private const int HtRight = 11;
     private const int HtTop = 12;
@@ -23,19 +29,66 @@ public partial class MainWindow : Window
     private const int HtBottomRight = 17;
     private const double ResizeBorderThickness = 8;
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativePoint
+    {
+        public int X;
+        public int Y;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativeRect
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MinMaxInfo
+    {
+        public NativePoint Reserved;
+        public NativePoint MaxSize;
+        public NativePoint MaxPosition;
+        public NativePoint MinTrackSize;
+        public NativePoint MaxTrackSize;
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+    private struct MonitorInfo
+    {
+        public int Size;
+        public NativeRect Monitor;
+        public NativeRect Work;
+        public uint Flags;
+    }
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr MonitorFromWindow(IntPtr windowHandle, uint flags);
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetMonitorInfo(IntPtr monitorHandle, ref MonitorInfo monitorInfo);
+
     /// <summary>Raised when the user toggles Keyboard Sounds, so the tray menu checkbox can stay in sync.</summary>
     public event Action<bool>? EnabledChanged;
 
     private readonly DashboardView _dashboard = new();
     private readonly SoundPackBrowserView _browser = new();
+    private readonly MouseClickSoundsView _mouseSounds = new();
     private readonly SoundLabView _soundLab = new();
     private readonly SettingsView _settings = new();
+    private readonly Stack<NavigationEntry> _navigationHistory = new();
+    private NavigationEntry _currentNavigation = null!;
 
     public MainWindow()
     {
         InitializeComponent();
+        _currentNavigation = new NavigationEntry(_dashboard, "Dashboard", DashboardNavButton);
 
         _dashboard.ChangeSoundRequested += NavigateToBrowser;
+        _dashboard.MouseSoundsRequested += NavigateToMouseSounds;
         _dashboard.EnabledChanged += isEnabled => EnabledChanged?.Invoke(isEnabled);
         _browser.PackActivated += () =>
         {
@@ -49,14 +102,37 @@ public partial class MainWindow : Window
         SourceInitialized += MainWindow_SourceInitialized;
         StateChanged += (_, _) => UpdateMaximizeRestoreButton();
         Loaded += (_, _) => _dashboard.RefreshActivePackDisplay();
+        PreviewKeyDown += MainWindow_PreviewKeyDown;
         Closing += MainWindow_Closing;
     }
 
     /// <summary>Called once by App right after construction, to apply settings loaded from disk
     /// before the window is shown - avoids a visible flash of default values.</summary>
-    public void ApplySettingsOnLoad(float masterVolume, bool keyboardSoundsEnabled)
+    public void ApplySettingsOnLoad(float masterVolume, bool keyboardSoundsEnabled, double windowWidth, double windowHeight)
     {
+        Rect workArea = SystemParameters.WorkArea;
+        double maximumWidth = Math.Max(640, workArea.Width - 24);
+        double maximumHeight = Math.Max(480, workArea.Height - 24);
+        MinWidth = Math.Min(MinWidth, maximumWidth);
+        MinHeight = Math.Min(MinHeight, maximumHeight);
+        Width = Math.Clamp(double.IsFinite(windowWidth) ? windowWidth : 1060, MinWidth, maximumWidth);
+        Height = Math.Clamp(double.IsFinite(windowHeight) ? windowHeight : 720, MinHeight, maximumHeight);
+        Left = workArea.Left + (workArea.Width - Width) / 2;
+        Top = workArea.Top + (workArea.Height - Height) / 2;
         _dashboard.SetInitialState(masterVolume, keyboardSoundsEnabled);
+    }
+
+    public void SaveWindowSize()
+    {
+        Rect bounds = WindowState == WindowState.Normal
+            ? new Rect(Left, Top, Width, Height)
+            : RestoreBounds;
+        if (bounds.Width <= 0 || bounds.Height <= 0) return;
+
+        var app = (App)Application.Current;
+        app.Settings.WindowWidth = bounds.Width;
+        app.Settings.WindowHeight = bounds.Height;
+        SettingsStore.Save(app.Settings);
     }
 
     // ===== Navigation =====
@@ -64,13 +140,19 @@ public partial class MainWindow : Window
     private void NavigateToBrowser()
     {
         _browser.RefreshCards();
-        NavigateTo(_browser, "Sound packs");
+        NavigateTo(_browser, "Sound packs", SoundPacksNavButton);
     }
 
     private void NavigateToSettings()
     {
         _settings.RefreshFromCurrentState();
-        NavigateTo(_settings, "Settings");
+        NavigateTo(_settings, "Settings", SettingsNavButton);
+    }
+
+    private void NavigateToMouseSounds()
+    {
+        _mouseSounds.RefreshLibrary();
+        NavigateTo(_mouseSounds, "Mouse clicks", MouseSoundsNavButton);
     }
 
     private void NavigateToSoundLab()
@@ -81,10 +163,22 @@ public partial class MainWindow : Window
 
     private void NavigateToDashboard()
     {
-        NavigateTo(_dashboard, "Dashboard");
+        _dashboard.RefreshControlCenter();
+        NavigateTo(_dashboard, "Dashboard", DashboardNavButton);
     }
 
-    private void NavigateTo(System.Windows.Controls.UserControl view, string pageTitle)
+    private void NavigateTo(System.Windows.Controls.UserControl view, string pageTitle, Button? activeNavigationButton = null)
+    {
+        if (ReferenceEquals(PageHost.Content, view)) return;
+
+        _navigationHistory.Push(_currentNavigation);
+        _currentNavigation = new NavigationEntry(view, pageTitle,
+            activeNavigationButton ?? _currentNavigation.ActiveNavigationButton);
+        UpdateNavigationControls();
+        ShowPage(view, pageTitle);
+    }
+
+    private void ShowPage(System.Windows.Controls.UserControl view, string pageTitle)
     {
         PageHeaderText.Text = pageTitle;
         var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(100));
@@ -97,23 +191,39 @@ public partial class MainWindow : Window
         PageHost.BeginAnimation(OpacityProperty, fadeOut);
     }
 
+    private void BackButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_navigationHistory.Count == 0) return;
+        _currentNavigation = _navigationHistory.Pop();
+        UpdateNavigationControls();
+        ShowPage(_currentNavigation.View, _currentNavigation.Title);
+    }
+
+    private void UpdateNavigationControls()
+    {
+        BackButton.IsEnabled = _navigationHistory.Count > 0;
+        SetActiveNavigation(_currentNavigation.ActiveNavigationButton);
+    }
+
     private void SoundLabButton_Click(object sender, RoutedEventArgs e) => NavigateToSoundLab();
 
     private void DashboardNavButton_Click(object sender, RoutedEventArgs e)
     {
-        SetActiveNavigation(DashboardNavButton);
         NavigateToDashboard();
     }
 
     private void SoundPacksNavButton_Click(object sender, RoutedEventArgs e)
     {
-        SetActiveNavigation(SoundPacksNavButton);
         NavigateToBrowser();
+    }
+
+    private void MouseSoundsNavButton_Click(object sender, RoutedEventArgs e)
+    {
+        NavigateToMouseSounds();
     }
 
     private void SettingsNavButton_Click(object sender, RoutedEventArgs e)
     {
-        SetActiveNavigation(SettingsNavButton);
         NavigateToSettings();
     }
 
@@ -121,6 +231,7 @@ public partial class MainWindow : Window
     {
         DashboardNavButton.Tag = ReferenceEquals(activeButton, DashboardNavButton) ? "Active" : "Inactive";
         SoundPacksNavButton.Tag = ReferenceEquals(activeButton, SoundPacksNavButton) ? "Active" : "Inactive";
+        MouseSoundsNavButton.Tag = ReferenceEquals(activeButton, MouseSoundsNavButton) ? "Active" : "Inactive";
         SettingsNavButton.Tag = ReferenceEquals(activeButton, SettingsNavButton) ? "Active" : "Inactive";
     }
 
@@ -128,7 +239,7 @@ public partial class MainWindow : Window
 
     public void SyncEnabledState(bool isEnabled) => _dashboard.SyncEnabledState(isEnabled);
 
-    public void RefreshActivePackDisplay() => _dashboard.RefreshActivePackDisplay();
+    public void RefreshActivePackDisplay() => _dashboard.RefreshControlCenter();
 
     // ===== Window chrome =====
 
@@ -136,6 +247,7 @@ public partial class MainWindow : Window
     {
         // Alt+F4 / taskbar close / the X button all close to tray. Only the tray's
         // "Exit" item actually terminates the app.
+        SaveWindowSize();
         e.Cancel = true;
         Hide();
     }
@@ -175,7 +287,22 @@ public partial class MainWindow : Window
     private void KeyboardHook_KeyDown(object? sender, KeyEventData e)
     {
         if (Dispatcher.HasShutdownStarted || Dispatcher.HasShutdownFinished) return;
-        Dispatcher.BeginInvoke(() => _soundLab.FlashPhysicalKeyPress(e.Key));
+        Dispatcher.BeginInvoke(() =>
+        {
+            if (!IsActive || !ReferenceEquals(PageHost.Content, _soundLab)) return;
+            if (!e.IsRepeat) _soundLab.HandleTypingGameKey(e.Key);
+            _soundLab.FlashPhysicalKeyPress(e.Key);
+        });
+    }
+
+    private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (!IsActive || !ReferenceEquals(PageHost.Content, _soundLab) || !_soundLab.IsTypingGameActive) return;
+        if (e.Key is Key.Back or Key.Space or Key.OemComma or Key.OemPeriod or Key.OemMinus ||
+            e.Key is >= Key.A and <= Key.Z || e.Key is >= Key.D0 and <= Key.D9)
+        {
+            e.Handled = true;
+        }
     }
 
     private void MainWindow_SourceInitialized(object? sender, EventArgs e)
@@ -188,6 +315,13 @@ public partial class MainWindow : Window
 
     private IntPtr WindowMessageHook(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
+        if (message == WmGetMinMaxInfo)
+        {
+            ApplyMonitorWorkArea(hwnd, lParam);
+            handled = true;
+            return IntPtr.Zero;
+        }
+
         if (message != WmNcHitTest || WindowState == WindowState.Maximized)
         {
             return IntPtr.Zero;
@@ -223,6 +357,28 @@ public partial class MainWindow : Window
 
         handled = true;
         return new IntPtr(hitTest);
+    }
+
+    private static void ApplyMonitorWorkArea(IntPtr windowHandle, IntPtr minMaxInfoPointer)
+    {
+        IntPtr monitorHandle = MonitorFromWindow(windowHandle, MonitorDefaultToNearest);
+        if (monitorHandle == IntPtr.Zero) return;
+
+        var monitorInfo = new MonitorInfo { Size = Marshal.SizeOf<MonitorInfo>() };
+        if (!GetMonitorInfo(monitorHandle, ref monitorInfo)) return;
+
+        var minMaxInfo = Marshal.PtrToStructure<MinMaxInfo>(minMaxInfoPointer);
+        minMaxInfo.MaxPosition = new NativePoint
+        {
+            X = monitorInfo.Work.Left - monitorInfo.Monitor.Left,
+            Y = monitorInfo.Work.Top - monitorInfo.Monitor.Top
+        };
+        minMaxInfo.MaxSize = new NativePoint
+        {
+            X = monitorInfo.Work.Right - monitorInfo.Work.Left,
+            Y = monitorInfo.Work.Bottom - monitorInfo.Work.Top
+        };
+        Marshal.StructureToPtr(minMaxInfo, minMaxInfoPointer, false);
     }
 
     private void Minimize_Click(object sender, RoutedEventArgs e)

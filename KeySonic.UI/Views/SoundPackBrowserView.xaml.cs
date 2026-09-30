@@ -1,9 +1,15 @@
 using System;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
+using System.Windows.Input;
 using System.Windows.Media;
+using KeySonic.Core.Audio;
 using KeySonic.Core.SoundPacks;
+using Microsoft.Win32;
 using Button = System.Windows.Controls.Button;
 using Orientation = System.Windows.Controls.Orientation;
 
@@ -16,6 +22,7 @@ public partial class SoundPackBrowserView : System.Windows.Controls.UserControl
 
     private App AppInstance => (App)System.Windows.Application.Current;
     private bool _sortDescending;
+    private bool _isImporting;
 
     public SoundPackBrowserView()
     {
@@ -43,6 +50,18 @@ public partial class SoundPackBrowserView : System.Windows.Controls.UserControl
             ? $"{packs.Count} packs"
             : $"{packs.Count} of {installedPacks.Count} packs";
         EmptyStateText.Visibility = packs.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void SearchBox_GotKeyboardFocus(object sender, System.Windows.Input.KeyboardFocusChangedEventArgs e)
+    {
+        SearchBorder.BorderBrush = (Brush)FindResource("AccentBrush");
+        SearchBorder.Background = (Brush)FindResource("SurfaceRaisedBrush");
+    }
+
+    private void SearchBox_LostKeyboardFocus(object sender, System.Windows.Input.KeyboardFocusChangedEventArgs e)
+    {
+        SearchBorder.BorderBrush = (Brush)FindResource("BorderBrush2");
+        SearchBorder.Background = (Brush)FindResource("SurfaceBrush");
     }
 
     private static bool MatchesSearch(SoundPack pack, string searchText)
@@ -105,18 +124,38 @@ public partial class SoundPackBrowserView : System.Windows.Controls.UserControl
         Grid.SetRow(description, 1);
         cardContent.Children.Add(description);
 
-        if (!string.IsNullOrWhiteSpace(pack.Metadata.Author))
+        int soundCount = Directory.Exists(pack.FolderPath)
+            ? Directory.EnumerateFiles(pack.FolderPath, "*.wav", SearchOption.TopDirectoryOnly).Count()
+            : 0;
+        var packDetails = new StackPanel { Margin = new Thickness(0, 0, 0, 8) };
+        packDetails.Children.Add(new TextBlock
         {
-            var author = new TextBlock
-            {
-                Text = pack.Metadata.Author,
-                Style = (Style)FindResource("SubText"),
-                FontSize = 11,
-                Margin = new Thickness(0, 0, 0, 10)
-            };
-            Grid.SetRow(author, 2);
-            cardContent.Children.Add(author);
-        }
+            Text = string.IsNullOrWhiteSpace(pack.Metadata.Author) ? "Creator not listed" : $"By {pack.Metadata.Author}",
+            Style = (Style)FindResource("SubText"),
+            FontSize = 11,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            ToolTip = pack.Metadata.Author
+        });
+        packDetails.Children.Add(new TextBlock
+        {
+            Text = string.IsNullOrWhiteSpace(pack.Metadata.License)
+                ? "License not stated · verify before redistribution"
+                : $"License: {pack.Metadata.License}",
+            Style = (Style)FindResource("SubText"),
+            FontSize = 11,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            ToolTip = string.IsNullOrWhiteSpace(pack.Metadata.License)
+                ? "The pack does not declare a license. Check the source terms before sharing or including it in a release."
+                : pack.Metadata.License
+        });
+        packDetails.Children.Add(new TextBlock
+        {
+            Text = $"{soundCount} WAV files · v{pack.Metadata.Version}",
+            Style = (Style)FindResource("SubText"),
+            FontSize = 11
+        });
+        Grid.SetRow(packDetails, 2);
+        cardContent.Children.Add(packDetails);
 
         var buttonRow = new StackPanel { Orientation = Orientation.Horizontal };
         var previewButton = new Button
@@ -154,7 +193,7 @@ public partial class SoundPackBrowserView : System.Windows.Controls.UserControl
         {
             Style = (Style)FindResource("Card"),
             Width = 310,
-            Height = 174,
+            Height = 194,
             Margin = new Thickness(0, 0, 12, 12),
             Child = cardContent
         };
@@ -186,5 +225,122 @@ public partial class SoundPackBrowserView : System.Windows.Controls.UserControl
         _sortDescending = !_sortDescending;
         SortButton.Content = _sortDescending ? "Z-A" : "A-Z";
         RefreshCards();
+    }
+
+    private async void ImportMechvibes_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFolderDialog { Title = "Select an unzipped Mechvibes sound pack" };
+        if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
+
+        string sourceFolder = dialog.FolderName;
+        string folderName = Path.GetFileName(Path.TrimEndingDirectorySeparator(sourceFolder));
+        await ImportPackAsync(folderName, "Converting Mechvibes sounds...", stagingFolder =>
+        {
+            var result = MechvibesPackConverter.Convert(sourceFolder, stagingFolder);
+            return $"{result.ConvertedSounds} sounds converted; {result.SkippedSounds} skipped.";
+        });
+    }
+
+    private async void ImportAudioFiles_Click(object sender, RoutedEventArgs e)
+    {
+        string extensions = string.Join(";", AudioFileExtensions.Supported.Select(extension => $"*{extension}"));
+        var dialog = new OpenFileDialog
+        {
+            Title = "Select sound files for a new keyboard pack",
+            Filter = $"Supported audio ({extensions})|{extensions}|All files (*.*)|*.*",
+            Multiselect = true
+        };
+        if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
+
+        string suggestedName = dialog.FileNames.Length == 1
+            ? Path.GetFileNameWithoutExtension(dialog.FileNames[0])
+            : "Custom sounds";
+        var nameDialog = new PackNameDialog(suggestedName) { Owner = Window.GetWindow(this) };
+        if (nameDialog.ShowDialog() != true) return;
+
+        await ImportPackAsync(nameDialog.PackName, "Building your sound pack...", stagingFolder =>
+        {
+            var result = CustomSoundPackImporter.ImportAudioFiles(dialog.FileNames, stagingFolder, nameDialog.PackName);
+            string summary = $"{result.ImportedFileCount} audio files imported.";
+            if (result.FailedFiles.Count > 0)
+            {
+                string failedFiles = string.Join(", ", result.FailedFiles.Take(5));
+                summary += $" {result.FailedFiles.Count} skipped: {failedFiles}" +
+                           (result.FailedFiles.Count > 5 ? ", ..." : ".");
+            }
+            return summary;
+        });
+    }
+
+    private async Task ImportPackAsync(string requestedName, string busyMessage, Func<string, string> createPack)
+    {
+        if (_isImporting) return;
+
+        string folderName = SanitizeFolderName(requestedName);
+        if (folderName.Length == 0)
+        {
+            MessageBox.Show("The pack name must contain at least one valid character.", "KeySonic - Import pack",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var app = AppInstance;
+        if (app.PackManager.InstalledPacks.Any(pack => string.Equals(
+                Path.GetFileName(pack.FolderPath), folderName, StringComparison.OrdinalIgnoreCase)))
+        {
+            MessageBox.Show($"A sound pack named '{folderName}' already exists. Rename or remove it before importing another with that folder name.",
+                "KeySonic - Import pack", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        Directory.CreateDirectory(app.UserPacksFolderPath);
+        string destinationFolder = Path.Combine(app.UserPacksFolderPath, folderName);
+        if (Directory.Exists(destinationFolder))
+        {
+            MessageBox.Show($"The destination folder already exists:\n{destinationFolder}", "KeySonic - Import pack",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        string stagingFolder = Path.Combine(app.UserPacksFolderPath, $".import-{Guid.NewGuid():N}");
+        _isImporting = true;
+        ImportMechvibesButton.IsEnabled = false;
+        ImportAudioButton.IsEnabled = false;
+        ImportBusyStatusText.Text = busyMessage;
+        ImportBusyOverlay.Visibility = Visibility.Visible;
+        try
+        {
+            await Dispatcher.Yield(DispatcherPriority.Render);
+            string importSummary = await Task.Run(() => createPack(stagingFolder));
+            Directory.Move(stagingFolder, destinationFolder);
+            app.PackManager.DiscoverPacks(app.PacksFolderPath, app.UserPacksFolderPath);
+            RefreshCards();
+            MessageBox.Show($"'{folderName}' was added to your sound packs.\n{importSummary}", "KeySonic - Import complete",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            if (Directory.Exists(stagingFolder))
+            {
+                try { Directory.Delete(stagingFolder, recursive: true); }
+                catch (IOException) { }
+            }
+            MessageBox.Show($"Couldn't import the sound pack:\n{ex.Message}", "KeySonic - Import failed",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        finally
+        {
+            ImportBusyOverlay.Visibility = Visibility.Collapsed;
+            ImportMechvibesButton.IsEnabled = true;
+            ImportAudioButton.IsEnabled = true;
+            _isImporting = false;
+        }
+    }
+
+    private static string SanitizeFolderName(string name)
+    {
+        char[] invalidCharacters = Path.GetInvalidFileNameChars();
+        string sanitized = new(name.Trim().Where(character => !invalidCharacters.Contains(character)).ToArray());
+        return sanitized.Trim().TrimEnd('.');
     }
 }

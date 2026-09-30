@@ -3,7 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <UserControl.Resources>
-        <SolidColorBrush x:Key="KeyboardKeyActiveBrush" Color="#8EADFF"/>
         <Style x:Key="KeyboardKeyButton" TargetType="ToggleButton">
             <Setter Property="Height" Value="40"/>
             <Setter Property="Margin" Value="2"/>
@@ -26,8 +25,8 @@
                                 <Setter TargetName="KeyBorder" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="KeyBorder" Property="Background" Value="{StaticResource KeyboardKeyActiveBrush}"/>
-                                <Setter TargetName="KeyBorder" Property="BorderBrush" Value="{StaticResource KeyboardKeyActiveBrush}"/>
+                                <Setter TargetName="KeyBorder" Property="Background" Value="{StaticResource AccentBrush}"/>
+                                <Setter TargetName="KeyBorder" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -57,9 +56,39 @@
                         </StackPanel>
                     </Grid>
 
+                    <Border x:Name="TypingGamePanel" Style="{StaticResource Card}" Margin="0,0,0,14"
+                            Visibility="Collapsed">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock x:Name="GamePromptText" FontSize="18" FontWeight="SemiBold"
+                                       TextWrapping="Wrap" LineHeight="28"/>
+                            <Grid Grid.Row="1" Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <ProgressBar x:Name="GameProgressBar" Height="5" Minimum="0" Maximum="100"
+                                             VerticalAlignment="Center"/>
+                                <TextBlock x:Name="GameProgressText" Grid.Column="1" Text="0%"
+                                           Style="{StaticResource SubText}" Margin="12,0,0,0"/>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
                     <Grid x:Name="KeyboardGrid"/>
                 </StackPanel>
             </Border>
+
+            <Grid Margin="0,14,0,10">
+                <Button x:Name="TypingGameButton" Content="Typing game" Style="{StaticResource GhostButton}"
+                        HorizontalAlignment="Left" Click="TypingGameButton_Click"/>
+                <Button x:Name="RestartGameButton" Content="Restart" Style="{StaticResource GhostButton}"
+                        HorizontalAlignment="Right" Visibility="Collapsed" Click="RestartGameButton_Click"/>
+            </Grid>
+
         </StackPanel>
     </ScrollViewer>
 </UserControl>

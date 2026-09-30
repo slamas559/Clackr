@@ -12,4 +12,14 @@
   <ItemGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
     <SourceRoot Include="C:\Users\AbdulSalam\.nuget\packages\" />
   </ItemGroup>
+  <ItemGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
+    <None Include="$(NuGetPackageRoot)naudio.vorbis\1.5.0\contentFiles\any\netstandard2.0\README.md" Condition="Exists('$(NuGetPackageRoot)naudio.vorbis\1.5.0\contentFiles\any\netstandard2.0\README.md')">
+      <NuGetPackageId>NAudio.Vorbis</NuGetPackageId>
+      <NuGetPackageVersion>1.5.0</NuGetPackageVersion>
+      <NuGetItemType>None</NuGetItemType>
+      <Pack>false</Pack>
+      <Private>False</Private>
+      <Link>README.md</Link>
+    </None>
+  </ItemGroup>
 </Project>

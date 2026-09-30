@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Reflection;
 using System.Windows;
 using KeySonic.Core.Settings;
 
@@ -13,7 +14,8 @@ public partial class SettingsView : System.Windows.Controls.UserControl
     public SettingsView()
     {
         InitializeComponent();
-        VersionText.Text = "KeySonic \u2014 early preview build";
+        string version = Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "unknown";
+        VersionText.Text = $"Clackr {version}";
     }
 
     /// <summary>Called every time this page is navigated to, so toggles reflect the real current state
@@ -23,6 +25,7 @@ public partial class SettingsView : System.Windows.Controls.UserControl
         _suppressEvents = true;
         StartWithWindowsToggle.IsChecked = StartupRegistration.IsEnabled();
         StartMinimizedToggle.IsChecked = AppInstance.Settings.StartMinimized;
+        AutoSwitchProfilesToggle.IsChecked = AppInstance.Settings.AutoSwitchProfilesEnabled;
         _suppressEvents = false;
     }
 
@@ -39,6 +42,13 @@ public partial class SettingsView : System.Windows.Controls.UserControl
         SettingsStore.Save(AppInstance.Settings);
     }
 
+    private void AutoSwitchProfilesToggle_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_suppressEvents) return;
+        AppInstance.Settings.AutoSwitchProfilesEnabled = AutoSwitchProfilesToggle.IsChecked == true;
+        SettingsStore.Save(AppInstance.Settings);
+    }
+
     private void OpenPacksFolder_Click(object sender, RoutedEventArgs e)
     {
         try
@@ -51,7 +61,7 @@ public partial class SettingsView : System.Windows.Controls.UserControl
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show($"Couldn't open the folder:\n{ex.Message}", "KeySonic",
+            System.Windows.MessageBox.Show($"Couldn't open the folder:\n{ex.Message}", "Clackr",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }

@@ -14,16 +14,22 @@ public sealed class SoundPackManager
     /// <summary>Fires whenever a different pack becomes active, so UI can refresh without polling.</summary>
     public event Action<SoundPack>? ActivePackChanged;
 
-    public void DiscoverPacks(string packsRootFolder)
+    public void DiscoverPacks(params string[] packsRootFolders)
     {
-        if (!Directory.Exists(packsRootFolder))
-            throw new DirectoryNotFoundException($"Sound packs folder not found: {packsRootFolder}");
+        string? activeFolder = ActivePack?.FolderPath;
+        string[] existingRoots = packsRootFolders.Where(Directory.Exists).ToArray();
+        if (existingRoots.Length == 0)
+        {
+            throw new DirectoryNotFoundException("No sound packs folders were found.");
+        }
 
         var packs = new List<SoundPack>();
-        foreach (var dir in Directory.EnumerateDirectories(packsRootFolder).OrderBy(d => d, StringComparer.OrdinalIgnoreCase))
+        var discoveredFolders = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var dir in existingRoots.SelectMany(Directory.EnumerateDirectories)
+                     .OrderBy(path => path, StringComparer.OrdinalIgnoreCase))
         {
-            bool hasWav = Directory.EnumerateFiles(dir, "*.wav").Any();
-            if (!hasWav) continue; // skip empty/unrelated folders rather than showing a broken pack
+            if (!discoveredFolders.Add(Path.GetFullPath(dir)) ||
+                !Directory.EnumerateFiles(dir).Any(AudioFileExtensions.IsSupported)) continue;
 
             try
             {
@@ -36,6 +42,15 @@ public sealed class SoundPackManager
         }
 
         InstalledPacks = packs;
+        if (activeFolder != null)
+        {
+            var activeReplacement = InstalledPacks.FirstOrDefault(pack =>
+                string.Equals(pack.FolderPath, activeFolder, StringComparison.OrdinalIgnoreCase));
+            if (activeReplacement != null)
+            {
+                Activate(activeReplacement);
+            }
+        }
     }
 
     /// <summary>Loads (if needed) and switches to the given pack. The pack must be one returned by DiscoverPacks.</summary>

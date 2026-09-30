@@ -59,24 +59,33 @@ public sealed class AudioEngine : IDisposable
     {
         if (!_enabled) return;
 
-        PlayCore(sound);
+        PlayCore(sound, _masterVolume);
     }
 
     public void PlayPreview(CachedSound sound)
     {
-        PlayCore(sound);
+        PlayCore(sound, _masterVolume);
     }
 
-    private void PlayCore(CachedSound sound)
+    public void PlayPreview(CachedSound sound, float volume)
     {
+        PlayCore(sound, volume);
+    }
 
+    public void PlayMouseClick(CachedSound sound, float volume)
+    {
+        PlayCore(sound, volume);
+    }
+
+    private void PlayCore(CachedSound sound, float volume)
+    {
         if (_mixer.MixerInputs.Count() >= MaxConcurrentVoices)
         {
             // Deliberately drop this voice rather than let inputs grow unbounded.
             return;
         }
 
-        var voice = new CachedSoundSampleProvider(sound, _masterVolume);
+        var voice = new CachedSoundSampleProvider(sound, Math.Clamp(volume, 0f, 1f));
         _mixer.AddMixerInput(voice);
     }
 

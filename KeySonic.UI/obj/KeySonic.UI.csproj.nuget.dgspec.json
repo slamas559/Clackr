@@ -1,7 +1,7 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\AbdulSalam\\KeySonic\\KeySonic.UI\\KeySonic.UI.csproj": {}
+    "C:\\Users\\AbdulSalam\\KeySonic\\Keysonic.UI\\KeySonic.UI.csproj": {}
   },
   "projects": {
     "C:\\Users\\AbdulSalam\\KeySonic\\KeySonic.Core\\KeySonic.Core.csproj": {
@@ -47,6 +47,10 @@
             "NAudio": {
               "target": "Package",
               "version": "[2.2.1, )"
+            },
+            "NAudio.Vorbis": {
+              "target": "Package",
+              "version": "[1.5.0, )"
             }
           },
           "imports": [
@@ -343,14 +347,14 @@
         }
       }
     },
-    "C:\\Users\\AbdulSalam\\KeySonic\\KeySonic.UI\\KeySonic.UI.csproj": {
+    "C:\\Users\\AbdulSalam\\KeySonic\\Keysonic.UI\\KeySonic.UI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\AbdulSalam\\KeySonic\\KeySonic.UI\\KeySonic.UI.csproj",
-        "projectName": "KeySonic",
-        "projectPath": "C:\\Users\\AbdulSalam\\KeySonic\\KeySonic.UI\\KeySonic.UI.csproj",
+        "projectUniqueName": "C:\\Users\\AbdulSalam\\KeySonic\\Keysonic.UI\\KeySonic.UI.csproj",
+        "projectName": "Clackr",
+        "projectPath": "C:\\Users\\AbdulSalam\\KeySonic\\Keysonic.UI\\KeySonic.UI.csproj",
         "packagesPath": "C:\\Users\\AbdulSalam\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\AbdulSalam\\KeySonic\\KeySonic.UI\\obj\\",
+        "outputPath": "C:\\Users\\AbdulSalam\\KeySonic\\Keysonic.UI\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\AbdulSalam\\AppData\\Roaming\\NuGet\\NuGet.Config"

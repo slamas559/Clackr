@@ -1,7 +1,7 @@
 <Window x:Class="KeySonic.UI.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="KeySonic"
+        Title="Clackr" Icon="Assets/icon-logo.png"
         Height="720" Width="1060"
         MinHeight="650" MinWidth="900"
         WindowStyle="None"
@@ -60,7 +60,7 @@
             <!-- ===== Title bar ===== -->
             <Grid x:Name="TitleBar" Grid.Row="0" Height="46" Background="Transparent"
                 PreviewMouseLeftButtonDown="TitleBar_PreviewMouseLeftButtonDown">
-                <TextBlock Text="KeySonic" FontWeight="SemiBold" FontSize="12.5"
+                <TextBlock Text="Clackr" FontWeight="SemiBold" FontSize="12.5"
                            Foreground="{StaticResource TextSecondaryBrush}"
                            VerticalAlignment="Center" Margin="14,0,0,0"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,8,0">
@@ -84,7 +84,9 @@
 
                 <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}"
                         BorderBrush="{StaticResource BorderBrush2}" BorderThickness="0,1,1,0">
-                    <StackPanel Margin="12,22,12,12">
+                    <StackPanel Margin="12,14,12,12">
+                        <Image Source="Assets/logo-with-name.png" Width="156" Height="156"
+                               Stretch="Uniform" HorizontalAlignment="Center" Margin="0,0,0,14"/>
                         <TextBlock Text="WORKSPACE" Style="{StaticResource SectionLabel}" Margin="10,0,0,10"/>
                         <Button x:Name="DashboardNavButton" Tag="Active" Style="{StaticResource SidebarNavigationButton}"
                                 Click="DashboardNavButton_Click">
@@ -98,6 +100,13 @@
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="15" Width="24" VerticalAlignment="Center"/>
                                 <TextBlock Text="Sound packs" FontSize="12.5" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="MouseSoundsNavButton" Tag="Inactive" Style="{StaticResource SidebarNavigationButton}"
+                                Click="MouseSoundsNavButton_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE962;" FontFamily="Segoe MDL2 Assets" FontSize="15" Width="24" VerticalAlignment="Center"/>
+                                <TextBlock Text="Mouse clicks" FontSize="12.5" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                         <Button x:Name="SettingsNavButton" Tag="Inactive" Style="{StaticResource SidebarNavigationButton}"
@@ -116,9 +125,19 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     <Grid Grid.Row="0" Margin="24,0,18,0">
-                        <TextBlock x:Name="PageHeaderText" Text="Dashboard" FontSize="16" FontWeight="SemiBold"
-                                   VerticalAlignment="Center"/>
-                        <Button x:Name="SoundLabButton" HorizontalAlignment="Right" VerticalAlignment="Center"
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Button x:Name="BackButton" Grid.Column="0" Width="34" Height="34"
+                                Style="{StaticResource ChromeButton}" Click="BackButton_Click"
+                                ToolTip="Go back" IsEnabled="False">
+                            <TextBlock Text="&#xE72B;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
+                        </Button>
+                        <TextBlock x:Name="PageHeaderText" Grid.Column="1" Text="Dashboard" FontSize="16"
+                                   FontWeight="SemiBold" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                        <Button x:Name="SoundLabButton" Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center"
                                 Width="38" Height="36" Style="{StaticResource ChromeButton}"
                                 Click="SoundLabButton_Click" ToolTip="Sound Lab">
                             <TextBlock Text="&#xE765;" FontFamily="Segoe MDL2 Assets" FontSize="16"/>

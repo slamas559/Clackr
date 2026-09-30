@@ -16,7 +16,7 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" Margin="0,0,16,0">
                             <TextBlock Text="Start with Windows" FontSize="13.5" FontWeight="SemiBold"/>
-                            <TextBlock Text="Launch KeySonic automatically when you sign in" Style="{StaticResource SubText}" TextWrapping="Wrap"/>
+                            <TextBlock Text="Launch Clackr automatically when you sign in" Style="{StaticResource SubText}" TextWrapping="Wrap"/>
                         </StackPanel>
                         <ToggleButton x:Name="StartWithWindowsToggle" Grid.Column="1" Style="{StaticResource ToggleSwitch}"
                                       VerticalAlignment="Center" Checked="StartWithWindowsToggle_Changed" Unchecked="StartWithWindowsToggle_Changed"/>
@@ -35,6 +35,22 @@
                         </StackPanel>
                         <ToggleButton x:Name="StartMinimizedToggle" Grid.Column="1" Style="{StaticResource ToggleSwitch}"
                                       VerticalAlignment="Center" Checked="StartMinimizedToggle_Changed" Unchecked="StartMinimizedToggle_Changed"/>
+                    </Grid>
+
+                    <Border Style="{StaticResource RowDivider}"/>
+
+                    <Grid Margin="16,14,16,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                            <TextBlock Text="Switch sound profiles automatically" FontSize="13.5" FontWeight="SemiBold"/>
+                            <TextBlock Text="Apply a profile when its assigned app is in the foreground" Style="{StaticResource SubText}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <ToggleButton x:Name="AutoSwitchProfilesToggle" Grid.Column="1" Style="{StaticResource ToggleSwitch}"
+                                      VerticalAlignment="Center" Checked="AutoSwitchProfilesToggle_Changed"
+                                      Unchecked="AutoSwitchProfilesToggle_Changed"/>
                     </Grid>
 
                 </StackPanel>
@@ -58,9 +74,9 @@
             <TextBlock Text="ABOUT" Style="{StaticResource SectionLabel}"/>
             <Border Style="{StaticResource GroupCard}">
                 <StackPanel Margin="16,14,16,14">
-                    <TextBlock x:Name="VersionText" Text="KeySonic 1.0.0" FontSize="13.5" FontWeight="SemiBold"/>
-                    <TextBlock Text="KeySonic does not record or transmit what you type." Style="{StaticResource SubText}"
-                               TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    <TextBlock x:Name="VersionText" Text="Clackr 1.0.0" FontSize="13.5" FontWeight="SemiBold"/>
+                    <TextBlock Text="Keyboard and mouse hooks run locally to trigger sounds. Typed text is not saved or sent. Settings and crash logs stay in your Windows user profile."
+                               Style="{StaticResource SubText}" TextWrapping="Wrap" Margin="0,4,0,0"/>
                 </StackPanel>
             </Border>
 

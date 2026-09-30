@@ -24,3 +24,5 @@ C:\Users\AbdulSalam\KeySonic\KeySonic.PackConverter\obj\Debug\net10.0-windows\re
 C:\Users\AbdulSalam\KeySonic\KeySonic.PackConverter\obj\Debug\net10.0-windows\KeySonic.PackConverter.pdb
 C:\Users\AbdulSalam\KeySonic\KeySonic.PackConverter\obj\Debug\net10.0-windows\KeySonic.PackConverter.genruntimeconfig.cache
 C:\Users\AbdulSalam\KeySonic\KeySonic.PackConverter\obj\Debug\net10.0-windows\ref\KeySonic.PackConverter.dll
+C:\Users\AbdulSalam\KeySonic\KeySonic.PackConverter\bin\Debug\net10.0-windows\KeySonic.Core.dll
+C:\Users\AbdulSalam\KeySonic\KeySonic.PackConverter\bin\Debug\net10.0-windows\KeySonic.Core.pdb

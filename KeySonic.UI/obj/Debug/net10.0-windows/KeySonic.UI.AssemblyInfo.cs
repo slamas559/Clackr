@@ -10,12 +10,12 @@
 using System;
 using System.Reflection;
 
-[assembly: System.Reflection.AssemblyCompanyAttribute("KeySonic")]
+[assembly: System.Reflection.AssemblyCompanyAttribute("Clackr")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+09b1d6cd09f116418e0a85aeaf17b8f51daf4308")]
-[assembly: System.Reflection.AssemblyProductAttribute("KeySonic")]
-[assembly: System.Reflection.AssemblyTitleAttribute("KeySonic")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d19100e21331082cf0001f26b9233cd3720683ef")]
+[assembly: System.Reflection.AssemblyProductAttribute("Clackr")]
+[assembly: System.Reflection.AssemblyTitleAttribute("Clackr")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
 [assembly: System.Runtime.Versioning.TargetPlatformAttribute("Windows7.0")]
 [assembly: System.Runtime.Versioning.SupportedOSPlatformAttribute("Windows7.0")]

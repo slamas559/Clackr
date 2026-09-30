@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Media.Animation;
+using System.Windows.Documents;
+using System.Windows.Media;
+using System.Windows.Threading;
 using KeySonic.Core.Keyboard;
 
 namespace KeySonic.UI.Views;
@@ -13,11 +15,63 @@ public partial class SoundLabView : UserControl
     private App AppInstance => (App)Application.Current;
     private ToggleButton? _selectedKeyButton;
     private readonly Dictionary<KeyCode, ToggleButton> _keyButtons = new();
+    private readonly DispatcherTimer _physicalKeyTimer = new() { Interval = TimeSpan.FromMilliseconds(140) };
+    private readonly DispatcherTimer _nextPromptTimer = new() { Interval = TimeSpan.FromMilliseconds(1100) };
+    private ToggleButton? _flashingPhysicalKeyButton;
+    private readonly List<bool> _gameCorrectCharacters = new();
+    private readonly string[] _gamePrompts =
+    {
+        "small sounds can make ordinary moments feel more focused.",
+        "steady practice turns each new skill into a natural habit.",
+        "a quiet room makes every clear note easier to notice."
+    };
+    private int _gamePromptIndex;
+    private string _currentGamePrompt = string.Empty;
+
+    public bool IsTypingGameActive { get; private set; }
 
     public SoundLabView()
     {
         InitializeComponent();
         BuildKeyboard();
+        _physicalKeyTimer.Tick += (_, _) =>
+        {
+            _physicalKeyTimer.Stop();
+            if (_flashingPhysicalKeyButton != null)
+            {
+                _flashingPhysicalKeyButton.IsChecked = false;
+                _flashingPhysicalKeyButton = null;
+            }
+        };
+        _nextPromptTimer.Tick += (_, _) =>
+        {
+            _nextPromptTimer.Stop();
+            if (IsTypingGameActive && _gameCorrectCharacters.Count == _currentGamePrompt.Length)
+            {
+                StartNextGamePrompt();
+            }
+        };
+    }
+
+    public void FlashPhysicalKeyPress(KeyCode key)
+    {
+        if (!_keyButtons.TryGetValue(key, out var button)) return;
+
+        if (_selectedKeyButton != null)
+        {
+            _selectedKeyButton.IsChecked = false;
+            _selectedKeyButton = null;
+        }
+
+        if (_flashingPhysicalKeyButton != null)
+        {
+            _flashingPhysicalKeyButton.IsChecked = false;
+        }
+
+        button.IsChecked = true;
+        _flashingPhysicalKeyButton = button;
+        _physicalKeyTimer.Stop();
+        _physicalKeyTimer.Start();
     }
 
     public void RefreshFromCurrentState()
@@ -35,17 +89,87 @@ public partial class SoundLabView : UserControl
         VariationCountText.Text = count == 1 ? "1 default variation" : $"{count} default variations";
     }
 
-    public void FlashPhysicalKeyPress(KeyCode key)
+    public bool HandleTypingGameKey(KeyCode key)
     {
-        if (!_keyButtons.TryGetValue(key, out var button)) return;
+        if (!IsTypingGameActive) return false;
 
-        button.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation
+        if (key == KeyCode.Backspace)
         {
-            From = 1,
-            To = 0.45,
-            Duration = TimeSpan.FromMilliseconds(70),
-            AutoReverse = true
-        });
+            if (_gameCorrectCharacters.Count > 0)
+            {
+                _gameCorrectCharacters.RemoveAt(_gameCorrectCharacters.Count - 1);
+                UpdateGamePrompt();
+            }
+            return true;
+        }
+
+        char typedCharacter = GetGameCharacter(key);
+        if (typedCharacter == '\0' || _gameCorrectCharacters.Count >= _currentGamePrompt.Length) return false;
+
+        int position = _gameCorrectCharacters.Count;
+        _gameCorrectCharacters.Add(char.ToLowerInvariant(typedCharacter) == _currentGamePrompt[position]);
+        UpdateGamePrompt();
+        return true;
+    }
+
+    private static char GetGameCharacter(KeyCode key) => key switch
+    {
+        >= KeyCode.A and <= KeyCode.Z => (char)('a' + (key - KeyCode.A)),
+        >= KeyCode.D0 and <= KeyCode.D9 => (char)('0' + (key - KeyCode.D0)),
+        KeyCode.Space => ' ',
+        KeyCode.Comma => ',',
+        KeyCode.Period => '.',
+        KeyCode.Minus => '-',
+        _ => '\0'
+    };
+
+    private void TypingGameButton_Click(object sender, RoutedEventArgs e)
+    {
+        IsTypingGameActive = !IsTypingGameActive;
+        _nextPromptTimer.Stop();
+        TypingGamePanel.Visibility = IsTypingGameActive ? Visibility.Visible : Visibility.Collapsed;
+        RestartGameButton.Visibility = IsTypingGameActive ? Visibility.Visible : Visibility.Collapsed;
+        TypingGameButton.Content = IsTypingGameActive ? "Exit typing game" : "Typing game";
+        if (IsTypingGameActive) StartNextGamePrompt();
+    }
+
+    private void RestartGameButton_Click(object sender, RoutedEventArgs e) => StartNextGamePrompt();
+
+    private void StartNextGamePrompt()
+    {
+        _nextPromptTimer.Stop();
+        _currentGamePrompt = _gamePrompts[_gamePromptIndex++ % _gamePrompts.Length];
+        _gameCorrectCharacters.Clear();
+        UpdateGamePrompt();
+    }
+
+    private void UpdateGamePrompt()
+    {
+        GamePromptText.Inlines.Clear();
+        for (int index = 0; index < _currentGamePrompt.Length; index++)
+        {
+            Brush color = index >= _gameCorrectCharacters.Count
+                ? (Brush)FindResource("TextSecondaryBrush")
+                : _gameCorrectCharacters[index]
+                    ? (Brush)FindResource("SuccessBrush")
+                    : (Brush)FindResource("DangerBrush");
+            GamePromptText.Inlines.Add(new Run(_currentGamePrompt[index].ToString()) { Foreground = color });
+        }
+
+        int progress = _currentGamePrompt.Length == 0
+            ? 0
+            : (int)Math.Round(_gameCorrectCharacters.Count * 100.0 / _currentGamePrompt.Length);
+        GameProgressBar.Value = progress;
+        GameProgressText.Text = $"{progress}%";
+        if (_gameCorrectCharacters.Count == _currentGamePrompt.Length && _currentGamePrompt.Length > 0)
+        {
+            GameProgressText.Text = "Complete";
+            if (!_nextPromptTimer.IsEnabled) _nextPromptTimer.Start();
+        }
+        else
+        {
+            _nextPromptTimer.Stop();
+        }
     }
 
     private void BuildKeyboard()
@@ -132,8 +256,8 @@ public partial class SoundLabView : UserControl
             Content = label,
             Style = (Style)FindResource("KeyboardKeyButton")
         };
-        _keyButtons[key] = button;
         button.Click += (_, _) => PreviewKey(button, key);
+        _keyButtons[key] = button;
         Grid.SetRow(button, row);
         Grid.SetColumn(button, column);
         Grid.SetColumnSpan(button, columnSpan);
