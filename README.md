@@ -1,15 +1,17 @@
-# KeySonic
+# Clackr
 
-KeySonic is a Windows desktop app that plays keyboard sounds as you type. Choose
+Clackr is a Windows desktop app that plays keyboard sounds as you type. Choose
 a sound pack, adjust the volume, and enable or disable sounds from the app. It
 runs in the system tray when its window is closed.
+
+Repository: <https://github.com/slamas559/Clackr>
 
 ## Requirements
 
 - Windows 10 or 11
 - .NET 10 SDK
 
-KeySonic uses Windows keyboard hooks, WPF, and Windows audio APIs, so it does not
+Clackr uses Windows keyboard hooks, WPF, and Windows audio APIs, so it does not
 run on macOS or Linux.
 
 ## Run the app
@@ -31,13 +33,13 @@ was active last time. Use the dashboard to preview or change the pack and
 control volume and keyboard sounds. The Sound Packs page lists installed packs.
 Open **Sound Lab** to see physical key presses highlighted or start the typing
 game. The game colors typed characters in the prompt and only processes
-keystrokes while Sound Lab and the KeySonic window are active.
+keystrokes while Sound Lab and the Clackr window are active.
 Use **Mouse clicks** to assign and tune separate left- and right-click sounds.
 Save keyboard and mouse settings together as a sound profile from the dashboard.
 
-Closing the window hides KeySonic in the system tray; it does not exit the app.
+Closing the window hides Clackr in the system tray; it does not exit the app.
 Use **Exit** in the tray icon's menu to quit. In Settings, you can choose to
-start KeySonic with Windows or start minimized.
+start Clackr with Windows or start minimized.
 
 ## Sound packs
 
@@ -110,7 +112,7 @@ on the receiving device.
 
 For automatic switching, enter a profile's target process name on the dashboard
 (`code`, for example, not `code.exe`) and enable **Switch sound profiles
-automatically** in Settings. KeySonic checks the foreground application locally
+automatically** in Settings. Clackr checks the foreground application locally
 and applies a matching profile. Automatic switching is off by default.
 
 ## Convert a Mechvibes pack
@@ -127,7 +129,7 @@ dotnet run --project KeySonic.PackConverter -- "C:\path\to\mechvibes-pack" "C:\p
 The converter supports sprite-style packs with a shared audio file and
 multi-file packs. It puts most key sounds into the default variation pool;
 space, Enter, and Backspace remain dedicated sounds. Check the output and test
-it in KeySonic before relying on a converted pack, as the converter may skip
+it in Clackr before relying on a converted pack, as the converter may skip
 unsupported or missing source sounds.
 
 ## Test harness
@@ -152,11 +154,15 @@ levels, keyboard and mouse enablement, saved profiles, window dimensions,
 start-minimized preference, automatic profile switching, and the last active
 pack.
 
-KeySonic observes keyboard and mouse events locally to trigger sounds; it does
+Clackr keeps the existing `%AppData%\KeySonic` data folder so upgrades retain
+access to settings, imported packs, mouse sounds, and logs. The `.ksprofile.json`
+profile format is also retained for compatibility.
+
+Clackr observes keyboard and mouse events locally to trigger sounds; it does
 not record or transmit them. The typing game only processes keystrokes while
-Sound Lab and the KeySonic window are active. Game input stays in memory; it is
+Sound Lab and the Clackr window are active. Game input stays in memory; it is
 not saved to disk or transmitted. A standard Windows integrity-level
-restriction applies: a non-elevated KeySonic process may not receive keyboard
+restriction applies: a non-elevated Clackr process may not receive keyboard
 input from an administrator-elevated application.
 
 ## Projects

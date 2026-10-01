@@ -4,7 +4,7 @@
         Title="Clackr"
         Icon="/Assets/icon-logo.png"
         Height="720"
-        Width="1200"
+        Width="1500"
         MinHeight="650"
         MinWidth="900"
         WindowStyle="None"

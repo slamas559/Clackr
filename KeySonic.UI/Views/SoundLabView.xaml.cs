@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
+using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
 using System.Windows.Threading;
 using KeySonic.Core.Keyboard;
 
@@ -13,11 +15,12 @@ namespace KeySonic.UI.Views;
 public partial class SoundLabView : UserControl
 {
     private App AppInstance => (App)Application.Current;
-    private ToggleButton? _selectedKeyButton;
-    private readonly Dictionary<KeyCode, ToggleButton> _keyButtons = new();
+    private KeyVisual? _selectedKey;
+    private readonly Dictionary<KeyCode, KeyVisual> _keys = new();
+    private readonly List<KeyVisual> _keyList = new();
     private readonly DispatcherTimer _physicalKeyTimer = new() { Interval = TimeSpan.FromMilliseconds(140) };
     private readonly DispatcherTimer _nextPromptTimer = new() { Interval = TimeSpan.FromMilliseconds(1100) };
-    private ToggleButton? _flashingPhysicalKeyButton;
+    private KeyVisual? _flashingKey;
     private readonly List<bool> _gameCorrectCharacters = new();
     private readonly string[] _gamePrompts =
     {
@@ -32,15 +35,21 @@ public partial class SoundLabView : UserControl
 
     public SoundLabView()
     {
+        _rgbBrush = CreateRgbBrush(_rgbShift);
         InitializeComponent();
         BuildKeyboard();
+        IsVisibleChanged += (_, e) =>
+        {
+            if ((bool)e.NewValue) StartRgbAnimation();
+            else StopRgbAnimation();
+        };
         _physicalKeyTimer.Tick += (_, _) =>
         {
             _physicalKeyTimer.Stop();
-            if (_flashingPhysicalKeyButton != null)
+            if (_flashingKey != null)
             {
-                _flashingPhysicalKeyButton.IsChecked = false;
-                _flashingPhysicalKeyButton = null;
+                _flashingKey.SetPressed(false);
+                _flashingKey = null;
             }
         };
         _nextPromptTimer.Tick += (_, _) =>
@@ -55,21 +64,21 @@ public partial class SoundLabView : UserControl
 
     public void FlashPhysicalKeyPress(KeyCode key)
     {
-        if (!_keyButtons.TryGetValue(key, out var button)) return;
+        if (!_keys.TryGetValue(key, out var visual)) return;
 
-        if (_selectedKeyButton != null)
+        if (_selectedKey != null)
         {
-            _selectedKeyButton.IsChecked = false;
-            _selectedKeyButton = null;
+            _selectedKey.SetPressed(false);
+            _selectedKey = null;
         }
 
-        if (_flashingPhysicalKeyButton != null)
+        if (_flashingKey != null && _flashingKey != visual)
         {
-            _flashingPhysicalKeyButton.IsChecked = false;
+            _flashingKey.SetPressed(false);
         }
 
-        button.IsChecked = true;
-        _flashingPhysicalKeyButton = button;
+        visual.SetPressed(true);
+        _flashingKey = visual;
         _physicalKeyTimer.Stop();
         _physicalKeyTimer.Start();
     }
@@ -174,15 +183,13 @@ public partial class SoundLabView : UserControl
 
     private void BuildKeyboard()
     {
-        for (int column = 0; column < 15; column++)
-        {
-            KeyboardGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        }
-
-        for (int row = 0; row < 5; row++)
-        {
-            KeyboardGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        }
+        _plate.Fill = PlateFill;
+        _plate.Stroke = _rgbBrush;
+        _plate.StrokeThickness = 2;
+        _plate.StrokeLineJoin = PenLineJoin.Round;
+        _lip.Fill = LipFill;
+        _plate.IsHitTestVisible = false;
+        _lip.IsHitTestVisible = false;
 
         AddKey("`", KeyCode.Grave, 0, 0);
         AddKey("1", KeyCode.D1, 0, 1);
@@ -247,38 +254,309 @@ public partial class SoundLabView : UserControl
         AddKey("Space", KeyCode.Space, 4, 5, 5);
         AddKey("Alt", KeyCode.RightAlt, 4, 10, 2);
         AddKey("Ctrl", KeyCode.RightCtrl, 4, 12, 3);
+
+        // Layering: case, then all underglow, then keys back-to-front so near rows overlap far rows.
+        KeyboardCanvas.Children.Add(_plate);
+        KeyboardCanvas.Children.Add(_lip);
+        foreach (var key in _keyList) KeyboardCanvas.Children.Add(key.Glow);
+        foreach (var key in _keyList) KeyboardCanvas.Children.Add(key.Root);
+    }
+
+    private void KeyboardCanvas_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (Math.Abs(e.NewSize.Width - _layoutWidth) < 0.5) return;
+        _layoutWidth = e.NewSize.Width;
+        ApplyLayout(_layoutWidth);
+    }
+
+    // ------------------------------------------------------------------
+    // Perspective keyboard
+    // The board is a flat plane tilted away from the typist. Every key corner is projected through a
+    // simple pinhole camera, so the far (top) edge comes out narrower than the near (bottom) edge:
+    // a true trapezoid, with each key a smaller trapezoid of its own.
+    // ------------------------------------------------------------------
+    private const double BoardCols = 15;
+    private const double BoardRows = 5;
+    private const double TiltDegrees = 36;      // higher = stronger trapezoid
+    private const double CameraDistance = 12;   // lower = stronger perspective
+    private const double KeyGap = 0.07;
+    private const double KeyInset = 0.045;      // top of a key is slightly smaller than its base
+    private const double KeyHeightUnits = 0.30; // key thickness
+    private const double CasePad = 0.55;
+    private const double RgbCycleSeconds = 6;
+    private const double IdleGlowOpacity = 0.28;
+
+    private static readonly Brush FaceFill = Frozen(new LinearGradientBrush(Color.FromRgb(0x3A, 0x3F, 0x4D), Color.FromRgb(0x23, 0x26, 0x32), 90));
+    private static readonly Brush FaceStroke = Frozen(new LinearGradientBrush(Color.FromRgb(0x5C, 0x65, 0x7A), Color.FromRgb(0x17, 0x1A, 0x20), 90));
+    private static readonly Brush WallFill = Frozen(new LinearGradientBrush(Color.FromRgb(0x15, 0x17, 0x1C), Color.FromRgb(0x07, 0x08, 0x0A), 90));
+    private static readonly Brush BaseFill = Frozen(new SolidColorBrush(Color.FromRgb(0x07, 0x08, 0x0A)));
+    private static readonly Brush PlateFill = Frozen(new LinearGradientBrush(Color.FromRgb(0x1A, 0x1D, 0x24), Color.FromRgb(0x0B, 0x0C, 0x10), 90));
+    private static readonly Brush LipFill = Frozen(new SolidColorBrush(Color.FromRgb(0x08, 0x09, 0x0C)));
+
+    // ONE shared rainbow brush for the whole board (instead of one animated brush + blur per key).
+    // It uses absolute coordinates, so each key shows the slice of the gradient under it and the colours
+    // sweep across the board as a wave. Only a single transform is animated.
+    private readonly TranslateTransform _rgbShift = new();
+    private readonly LinearGradientBrush _rgbBrush;
+    private readonly Polygon _plate = new();
+    private readonly Polygon _lip = new();
+    private double _layoutWidth;
+    private double _focal, _originX, _bottomY, _tiltSin, _tiltCos;
+
+    private static T Frozen<T>(T freezable) where T : Freezable
+    {
+        freezable.Freeze();
+        return freezable;
+    }
+
+    private static LinearGradientBrush CreateRgbBrush(Transform shift)
+    {
+        Color[] stops =
+        {
+            Color.FromRgb(255, 40, 40),
+            Color.FromRgb(255, 200, 0),
+            Color.FromRgb(40, 255, 90),
+            Color.FromRgb(0, 220, 255),
+            Color.FromRgb(70, 90, 255),
+            Color.FromRgb(220, 60, 255),
+            Color.FromRgb(255, 40, 40)
+        };
+
+        var brush = new LinearGradientBrush
+        {
+            MappingMode = BrushMappingMode.Absolute,
+            SpreadMethod = GradientSpreadMethod.Repeat,
+            StartPoint = new Point(0, 0),
+            EndPoint = new Point(600, 130),
+            Transform = shift
+        };
+        for (int i = 0; i < stops.Length; i++)
+        {
+            brush.GradientStops.Add(new GradientStop(stops[i], i / (double)(stops.Length - 1)));
+        }
+
+        return brush;
+    }
+
+    private void StartRgbAnimation()
+    {
+        if (_layoutWidth <= 0) return;
+        var end = _rgbBrush.EndPoint;
+        var duration = TimeSpan.FromSeconds(RgbCycleSeconds);
+
+        var animateX = new DoubleAnimation(0, end.X, duration) { RepeatBehavior = RepeatBehavior.Forever };
+        var animateY = new DoubleAnimation(0, end.Y, duration) { RepeatBehavior = RepeatBehavior.Forever };
+        Timeline.SetDesiredFrameRate(animateX, 30);
+        Timeline.SetDesiredFrameRate(animateY, 30);
+        _rgbShift.BeginAnimation(TranslateTransform.XProperty, animateX);
+        _rgbShift.BeginAnimation(TranslateTransform.YProperty, animateY);
+    }
+
+    private void StopRgbAnimation()
+    {
+        _rgbShift.BeginAnimation(TranslateTransform.XProperty, null);
+        _rgbShift.BeginAnimation(TranslateTransform.YProperty, null);
+    }
+
+    // u = column position (0..15), w = row position (0 = far/top row, 5 = near/bottom edge)
+    private Point Project(double u, double w)
+    {
+        double far = BoardRows - w;
+        double z = CameraDistance + far * _tiltSin;
+        double scale = _focal / z;
+        return new Point(_originX + (u - BoardCols / 2) * scale, _bottomY - far * _tiltCos * scale);
+    }
+
+    private static Point Lerp(Point a, Point b, double t) => new(a.X + (b.X - a.X) * t, a.Y + (b.Y - a.Y) * t);
+
+    private static Point OnQuad(Point tl, Point tr, Point br, Point bl, double s, double t) =>
+        Lerp(Lerp(tl, tr, s), Lerp(bl, br, s), t);
+
+    private static Point Up(Point p, double amount) => new(p.X, p.Y - amount);
+
+    private void ApplyLayout(double width)
+    {
+        if (width < 80) return;
+
+        double phi = TiltDegrees * Math.PI / 180;
+        _tiltSin = Math.Sin(phi);
+        _tiltCos = Math.Cos(phi);
+
+        double nearZ = CameraDistance - CasePad * _tiltSin;
+        double farZ = CameraDistance + (BoardRows + CasePad) * _tiltSin;
+        _focal = 0.96 * width * nearZ / (BoardCols + 2 * CasePad);
+        _originX = width / 2;
+        _bottomY = 8 + (BoardRows + CasePad) * _tiltCos * _focal / farZ;
+
+        double lip = 0.5 * _focal / nearZ;
+        KeyboardCanvas.Height = _bottomY + CasePad * _tiltCos * _focal / nearZ + lip + 14;
+
+        Point tl = Project(-CasePad, -CasePad);
+        Point tr = Project(BoardCols + CasePad, -CasePad);
+        Point br = Project(BoardCols + CasePad, BoardRows + CasePad);
+        Point bl = Project(-CasePad, BoardRows + CasePad);
+        _plate.Points = new PointCollection { tl, tr, br, bl };
+        _lip.Points = new PointCollection { bl, br, new Point(br.X, br.Y + lip), new Point(bl.X, bl.Y + lip) };
+
+        foreach (var key in _keyList) LayoutKey(key);
+
+        double period = width * 0.8;
+        _rgbBrush.EndPoint = new Point(period, period * 0.22);
+        if (IsVisible) StartRgbAnimation();
+    }
+
+    private void LayoutKey(KeyVisual key)
+    {
+        double u0 = key.Column + KeyGap, u1 = key.Column + key.Span - KeyGap;
+        double w0 = key.Row + KeyGap, w1 = key.Row + 1 - KeyGap;
+
+        double rowScale = _focal / (CameraDistance + (BoardRows - (key.Row + 0.5)) * _tiltSin);
+        double height = KeyHeightUnits * rowScale;
+
+        // base footprint (what touches the board)
+        Point b0 = Project(u0, w0), b1 = Project(u1, w0), b2 = Project(u1, w1), b3 = Project(u0, w1);
+        // top face: slightly smaller, lifted up by the key height
+        Point f0 = Up(Project(u0 + KeyInset, w0 + KeyInset), height);
+        Point f1 = Up(Project(u1 - KeyInset, w0 + KeyInset), height);
+        Point f2 = Up(Project(u1 - KeyInset, w1 - KeyInset), height);
+        Point f3 = Up(Project(u0 + KeyInset, w1 - KeyInset), height);
+
+        key.Glow.Points = new PointCollection
+        {
+            Project(u0 - 0.10, w0 - 0.10), Project(u1 + 0.10, w0 - 0.10),
+            Project(u1 + 0.10, w1 + 0.10), Project(u0 - 0.10, w1 + 0.10)
+        };
+        key.Base.Points = new PointCollection { b0, b1, b2, b3 };
+        key.Wall.Points = new PointCollection { f3, f2, b2, b3 };
+        key.Face.Points = new PointCollection { f0, f1, f2, f3 };
+        key.Tint.Points = key.Face.Points;
+        key.Strip.Points = new PointCollection
+        {
+            OnQuad(f0, f1, f2, f3, 0.10, 0.80), OnQuad(f0, f1, f2, f3, 0.90, 0.80),
+            OnQuad(f0, f1, f2, f3, 0.90, 0.89), OnQuad(f0, f1, f2, f3, 0.10, 0.89)
+        };
+
+        key.Text.FontSize = Math.Clamp(rowScale * 0.27, 8, 14);
+        key.Text.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        Point center = OnQuad(f0, f1, f2, f3, 0.5, 0.42);
+        Canvas.SetLeft(key.Text, center.X - key.Text.DesiredSize.Width / 2);
+        Canvas.SetTop(key.Text, center.Y - key.Text.DesiredSize.Height / 2);
+
+        key.PressDepth = height * 0.7;
+        if (key.IsPressed) key.FaceShift.Y = key.PressDepth;
     }
 
     private void AddKey(string label, KeyCode key, int row, int column, int columnSpan = 1)
     {
-        var button = new ToggleButton
+        var visual = new KeyVisual(label, key, row, column, columnSpan, _rgbBrush, (Brush)FindResource("TextPrimaryBrush"));
+        visual.Root.MouseLeftButtonDown += (_, e) =>
         {
-            Content = label,
-            Style = (Style)FindResource("KeyboardKeyButton")
+            PreviewKey(visual);
+            e.Handled = true;
         };
-        button.Click += (_, _) => PreviewKey(button, key);
-        _keyButtons[key] = button;
-        Grid.SetRow(button, row);
-        Grid.SetColumn(button, column);
-        Grid.SetColumnSpan(button, columnSpan);
-        KeyboardGrid.Children.Add(button);
+        _keys[key] = visual;
+        _keyList.Add(visual);
     }
 
-    private void PreviewKey(ToggleButton button, KeyCode key)
+    private void PreviewKey(KeyVisual visual)
     {
-        if (_selectedKeyButton != null && _selectedKeyButton != button)
+        if (_selectedKey != null && _selectedKey != visual)
         {
-            _selectedKeyButton.IsChecked = false;
+            _selectedKey.SetPressed(false);
         }
 
-        button.IsChecked = true;
-        _selectedKeyButton = button;
-        SelectedKeyText.Text = (string)button.Content;
+        visual.SetPressed(true);
+        _selectedKey = visual;
+        SelectedKeyText.Text = visual.Label;
 
         var pack = AppInstance.PackManager.ActivePack;
         if (pack == null) return;
 
-        var sound = pack.EnsureLoaded().PickSound(key);
+        var sound = pack.EnsureLoaded().PickSound(visual.Key);
         AppInstance.AudioEngine.PlayPreview(sound);
+    }
+
+    private sealed class KeyVisual
+    {
+        public readonly string Label;
+        public readonly KeyCode Key;
+        public readonly int Row, Column, Span;
+
+        public readonly Canvas Root = new() { Cursor = Cursors.Hand };
+        public readonly Polygon Glow = new() { IsHitTestVisible = false, Opacity = IdleGlowOpacity };
+        public readonly Polygon Base = new();
+        public readonly Polygon Wall = new();
+        public readonly Canvas FaceGroup = new();
+        public readonly Polygon Face = new();
+        public readonly Polygon Tint = new() { IsHitTestVisible = false, Opacity = 0 };
+        public readonly Polygon Strip = new() { IsHitTestVisible = false, Opacity = 0.9 };
+        public readonly TextBlock Text = new();
+        public readonly TranslateTransform FaceShift = new();
+
+        public double PressDepth;
+        public bool IsPressed { get; private set; }
+
+        public KeyVisual(string label, KeyCode key, int row, int column, int span, Brush rgb, Brush textBrush)
+        {
+            Label = label;
+            Key = key;
+            Row = row;
+            Column = column;
+            Span = span;
+
+            Glow.Fill = rgb;
+            Base.Fill = BaseFill;
+            Wall.Fill = WallFill;
+            Face.Fill = FaceFill;
+            Face.Stroke = FaceStroke;
+            Face.StrokeThickness = 1;
+            Face.StrokeLineJoin = PenLineJoin.Round;
+            Tint.Fill = rgb;
+            Strip.Fill = rgb;
+
+            Text.Text = label;
+            Text.Foreground = textBrush;
+            Text.FontWeight = FontWeights.SemiBold;
+            Text.IsHitTestVisible = false;
+            // squash the label a little vertically to match the foreshortened key tops
+            Text.RenderTransformOrigin = new Point(0.5, 0.5);
+            Text.RenderTransform = new ScaleTransform(1, 0.86);
+
+            FaceGroup.RenderTransform = FaceShift;
+            FaceGroup.Children.Add(Face);
+            FaceGroup.Children.Add(Tint);
+            FaceGroup.Children.Add(Strip);
+            FaceGroup.Children.Add(Text);
+
+            Root.Children.Add(Base);
+            Root.Children.Add(Wall);
+            Root.Children.Add(FaceGroup);
+        }
+
+        // Press is applied instantly (no animation) so the key reacts the moment the event arrives;
+        // only the release eases back, and that is a short 90 ms animation.
+        public void SetPressed(bool pressed)
+        {
+            if (IsPressed == pressed) return;
+            IsPressed = pressed;
+
+            FaceShift.BeginAnimation(TranslateTransform.YProperty, null);
+            if (pressed)
+            {
+                FaceShift.Y = PressDepth;
+                Tint.Opacity = 0.45;
+                Glow.Opacity = 0.85;
+            }
+            else
+            {
+                FaceShift.Y = 0;
+                FaceShift.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(PressDepth, 0, TimeSpan.FromMilliseconds(90))
+                {
+                    FillBehavior = FillBehavior.Stop
+                });
+                Tint.Opacity = 0;
+                Glow.Opacity = IdleGlowOpacity;
+            }
+        }
     }
 }

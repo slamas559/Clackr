@@ -176,7 +176,7 @@ public partial class MouseClickSoundsView : UserControl
         var app = AppInstance;
         if (!app.MouseClickSounds.TrySetSound(button, choice.RelativePath, out var error))
         {
-            MessageBox.Show(error, "KeySonic - Mouse sound", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(error, "Clackr - Mouse sound", MessageBoxButton.OK, MessageBoxImage.Warning);
             RefreshLibrary();
             return;
         }
@@ -225,7 +225,7 @@ public partial class MouseClickSoundsView : UserControl
         var sound = AppInstance.MouseClickSounds.GetSound(button);
         if (sound == null)
         {
-            MessageBox.Show("Choose a sound file for this button first.", "KeySonic - Mouse sound",
+            MessageBox.Show("Choose a sound file for this button first.", "Clackr - Mouse sound",
                 MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
@@ -291,7 +291,7 @@ public partial class MouseClickSoundsView : UserControl
         }
         if (failures.Count > 0)
         {
-            MessageBox.Show(string.Join(Environment.NewLine, failures), "KeySonic - Couldn't add some sounds",
+            MessageBox.Show(string.Join(Environment.NewLine, failures), "Clackr - Couldn't add some sounds",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
@@ -318,7 +318,7 @@ public partial class MouseClickSoundsView : UserControl
         var app = AppInstance;
         if (!app.MouseClickSounds.TryLoadSound(file.RelativePath, out var sound, out var error) || sound == null)
         {
-            MessageBox.Show(error, "KeySonic - Mouse sound", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(error, "Clackr - Mouse sound", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -337,7 +337,7 @@ public partial class MouseClickSoundsView : UserControl
         var app = AppInstance;
         if (!app.MouseClickSounds.TrySetSound(button, file.RelativePath, out var error))
         {
-            MessageBox.Show(error, "KeySonic - Mouse sound", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(error, "Clackr - Mouse sound", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 

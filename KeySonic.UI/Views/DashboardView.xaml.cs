@@ -82,7 +82,7 @@ public partial class DashboardView : System.Windows.Controls.UserControl
         var app = AppInstance;
         if (!app.ApplySoundProfile(profile, out var warning))
         {
-            MessageBox.Show(warning, "KeySonic - Profile", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(warning, "Clackr - Profile", MessageBoxButton.OK, MessageBoxImage.Warning);
             RefreshProfiles();
             return;
         }
@@ -102,7 +102,7 @@ public partial class DashboardView : System.Windows.Controls.UserControl
         string name = ProfileNameTextBox.Text.Trim();
         if (name.Length == 0)
         {
-            MessageBox.Show("Enter a name for this profile.", "KeySonic - Profile", MessageBoxButton.OK,
+            MessageBox.Show("Enter a name for this profile.", "Clackr - Profile", MessageBoxButton.OK,
                 MessageBoxImage.Information);
             ProfileNameTextBox.Focus();
             return;
@@ -149,15 +149,15 @@ public partial class DashboardView : System.Windows.Controls.UserControl
     {
         if (ProfileCombo.SelectedItem is not SoundProfile profile)
         {
-            MessageBox.Show("Choose a saved profile to export.", "KeySonic - Profile", MessageBoxButton.OK,
+            MessageBox.Show("Choose a saved profile to export.", "Clackr - Profile", MessageBoxButton.OK,
                 MessageBoxImage.Information);
             return;
         }
 
         var dialog = new SaveFileDialog
         {
-            Title = "Export KeySonic profile",
-            Filter = "KeySonic profile (*.ksprofile.json)|*.ksprofile.json|JSON file (*.json)|*.json",
+            Title = "Export Clackr profile",
+            Filter = "Clackr profile (*.ksprofile.json)|*.ksprofile.json|JSON file (*.json)|*.json",
             FileName = $"{profile.Name}.ksprofile.json",
             AddExtension = true,
             DefaultExt = ".json"
@@ -171,7 +171,7 @@ public partial class DashboardView : System.Windows.Controls.UserControl
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Couldn't export the profile:\n{ex.Message}", "KeySonic - Profile",
+            MessageBox.Show($"Couldn't export the profile:\n{ex.Message}", "Clackr - Profile",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
@@ -180,8 +180,8 @@ public partial class DashboardView : System.Windows.Controls.UserControl
     {
         var dialog = new OpenFileDialog
         {
-            Title = "Import KeySonic profile",
-            Filter = "KeySonic profile (*.ksprofile.json;*.json)|*.ksprofile.json;*.json|All files (*.*)|*.*",
+            Title = "Import Clackr profile",
+            Filter = "Clackr profile (*.ksprofile.json;*.json)|*.ksprofile.json;*.json|All files (*.*)|*.*",
             Multiselect = false
         };
         if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
@@ -191,7 +191,7 @@ public partial class DashboardView : System.Windows.Controls.UserControl
             var profile = JsonSerializer.Deserialize<SoundProfile>(File.ReadAllText(dialog.FileName));
             if (profile == null || string.IsNullOrWhiteSpace(profile.Name))
             {
-                throw new InvalidDataException("The selected file does not contain a named KeySonic profile.");
+                throw new InvalidDataException("The selected file does not contain a named Clackr profile.");
             }
 
             profile.Name = profile.Name.Trim();
@@ -202,7 +202,7 @@ public partial class DashboardView : System.Windows.Controls.UserControl
             if (existingIndex >= 0)
             {
                 var replace = MessageBox.Show($"A profile named '{profile.Name}' already exists. Replace it?",
-                    "KeySonic - Import profile", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                    "Clackr - Import profile", MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (replace != MessageBoxResult.Yes) return;
                 app.Settings.SoundProfiles[existingIndex] = profile;
             }
@@ -224,7 +224,7 @@ public partial class DashboardView : System.Windows.Controls.UserControl
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Couldn't import the profile:\n{ex.Message}", "KeySonic - Profile",
+            MessageBox.Show($"Couldn't import the profile:\n{ex.Message}", "Clackr - Profile",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }

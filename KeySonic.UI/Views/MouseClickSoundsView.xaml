@@ -244,7 +244,7 @@
                     <ProgressBar IsIndeterminate="True" Height="4" Margin="0,0,0,14"/>
                     <TextBlock x:Name="MouseImportBusyStatusText" Text="Adding sounds..."
                                FontSize="14" FontWeight="SemiBold" HorizontalAlignment="Center"/>
-                    <TextBlock Text="KeySonic will be ready again shortly."
+                    <TextBlock Text="Clackr will be ready again shortly."
                                Style="{StaticResource SubText}" Margin="0,5,0,0"
                                HorizontalAlignment="Center"/>
                 </StackPanel>

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("KeySonic.PackConverter")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+57ac32dfddc7a148fe7a99d6b2699431ae1444df")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f1f9c818e340eb0d066dd63cae0773fa652ae03c")]
 [assembly: System.Reflection.AssemblyProductAttribute("KeySonic.PackConverter")]
 [assembly: System.Reflection.AssemblyTitleAttribute("KeySonic.PackConverter")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

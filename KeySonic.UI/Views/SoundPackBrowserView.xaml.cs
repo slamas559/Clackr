@@ -279,7 +279,7 @@ public partial class SoundPackBrowserView : System.Windows.Controls.UserControl
         string folderName = SanitizeFolderName(requestedName);
         if (folderName.Length == 0)
         {
-            MessageBox.Show("The pack name must contain at least one valid character.", "KeySonic - Import pack",
+            MessageBox.Show("The pack name must contain at least one valid character.", "Clackr - Import pack",
                 MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
@@ -289,7 +289,7 @@ public partial class SoundPackBrowserView : System.Windows.Controls.UserControl
                 Path.GetFileName(pack.FolderPath), folderName, StringComparison.OrdinalIgnoreCase)))
         {
             MessageBox.Show($"A sound pack named '{folderName}' already exists. Rename or remove it before importing another with that folder name.",
-                "KeySonic - Import pack", MessageBoxButton.OK, MessageBoxImage.Information);
+                "Clackr - Import pack", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -297,7 +297,7 @@ public partial class SoundPackBrowserView : System.Windows.Controls.UserControl
         string destinationFolder = Path.Combine(app.UserPacksFolderPath, folderName);
         if (Directory.Exists(destinationFolder))
         {
-            MessageBox.Show($"The destination folder already exists:\n{destinationFolder}", "KeySonic - Import pack",
+            MessageBox.Show($"The destination folder already exists:\n{destinationFolder}", "Clackr - Import pack",
                 MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
@@ -315,7 +315,7 @@ public partial class SoundPackBrowserView : System.Windows.Controls.UserControl
             Directory.Move(stagingFolder, destinationFolder);
             app.PackManager.DiscoverPacks(app.PacksFolderPath, app.UserPacksFolderPath);
             RefreshCards();
-            MessageBox.Show($"'{folderName}' was added to your sound packs.\n{importSummary}", "KeySonic - Import complete",
+            MessageBox.Show($"'{folderName}' was added to your sound packs.\n{importSummary}", "Clackr - Import complete",
                 MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
@@ -325,7 +325,7 @@ public partial class SoundPackBrowserView : System.Windows.Controls.UserControl
                 try { Directory.Delete(stagingFolder, recursive: true); }
                 catch (IOException) { }
             }
-            MessageBox.Show($"Couldn't import the sound pack:\n{ex.Message}", "KeySonic - Import failed",
+            MessageBox.Show($"Couldn't import the sound pack:\n{ex.Message}", "Clackr - Import failed",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         finally
