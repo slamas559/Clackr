@@ -28,6 +28,32 @@ To build the full solution:
 dotnet build KeySonic.sln
 ```
 
+## Build and download the installer
+
+Install the .NET 10 SDK and Inno Setup 6, then run this from the repository
+folder:
+
+```powershell
+.\scripts\build-installer.ps1 -Version 1.0.0
+```
+
+The script publishes a self-contained 64-bit Windows app and creates
+`artifacts\Clackr-Setup-1.0.0-win-x64.exe`. The installer is per-user and does
+not require administrator access. It adds a Start Menu shortcut, offers an
+optional desktop shortcut, and preserves settings and imported sounds in
+`%AppData%\KeySonic` when uninstalled.
+
+To publish a downloadable GitHub release, push a version tag. GitHub Actions
+will build the installer and attach it to the release:
+
+```powershell
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The installer is currently unsigned, so Windows may show a SmartScreen warning
+until the app has a trusted code-signing certificate.
+
 The app starts with the first available sound pack, or restores the pack that
 was active last time. Use the dashboard to preview or change the pack and
 control volume and keyboard sounds. The Sound Packs page lists installed packs.
