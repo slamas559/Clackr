@@ -401,5 +401,7 @@ public partial class MainWindow : Window
         MaximizeRestoreButton.ToolTip = isMaximized ? "Restore" : "Maximize";
     }
 
+    private void Exit_Click(object sender, RoutedEventArgs e) => ((App)Application.Current).ExitApplication();
+
     private void Close_Click(object sender, RoutedEventArgs e) => Hide();
 }

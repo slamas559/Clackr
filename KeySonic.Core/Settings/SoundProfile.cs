@@ -12,4 +12,6 @@ public sealed class SoundProfile
     public float RightMouseClickVolume { get; set; } = 0.7f;
     public string? LeftMouseClickSoundPath { get; set; }
     public string? RightMouseClickSoundPath { get; set; }
+
+    public override string ToString() => Name;
 }

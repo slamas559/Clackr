@@ -73,6 +73,9 @@
                     <Button x:Name="MaximizeRestoreButton" Style="{StaticResource ChromeButton}" Click="MaximizeRestore_Click" ToolTip="Maximize">
                         <TextBlock x:Name="MaximizeRestoreIcon" Text="&#xE922;" FontFamily="Segoe MDL2 Assets" FontSize="10"/>
                     </Button>
+                    <Button Style="{StaticResource ChromeButton}" Click="Exit_Click" ToolTip="Exit Clackr">
+                        <TextBlock Text="&#xE7E8;" FontFamily="Segoe MDL2 Assets" FontSize="11"/>
+                    </Button>
                     <Button Style="{StaticResource CloseChromeButton}" Click="Close_Click" ToolTip="Close to tray">
                         <TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="11"/>
                     </Button>
