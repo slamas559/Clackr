@@ -1,29 +1,40 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>disable</ImplicitUsings>
-    <UseWPF>true</UseWPF>
-    <UseWindowsForms>true</UseWindowsForms>
-    <AssemblyName>Clackr</AssemblyName>
-    <AssemblyTitle>Clackr</AssemblyTitle>
-    <Product>Clackr</Product>
-    <ApplicationIcon>Assets\clackr.ico</ApplicationIcon>
-    <RootNamespace>KeySonic.UI</RootNamespace>
-  </PropertyGroup>
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net10.0-windows</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>disable</ImplicitUsings>
 
-  <ItemGroup>
-    <ProjectReference Include="..\KeySonic.Core\KeySonic.Core.csproj" />
-  </ItemGroup>
+        <UseWPF>true</UseWPF>
+        <UseWindowsForms>true</UseWindowsForms>
 
-  <ItemGroup>
-    <Resource Include="Assets\*.png" />
-  </ItemGroup>
+        <AssemblyName>Clackr</AssemblyName>
+        <AssemblyTitle>Clackr</AssemblyTitle>
+        <Product>Clackr</Product>
 
-  <ItemGroup>
-    <None Include="..\packs\**\*.*" CopyToOutputDirectory="PreserveNewest" LinkBase="packs" />
-  </ItemGroup>
+        <ApplicationIcon>Assets\clackr.ico</ApplicationIcon>
+
+        <RootNamespace>KeySonic.UI</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\KeySonic.Core\KeySonic.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Resource Include="Assets\icon-logo.png" />
+        <Resource Include="Assets\logo-with-name.png" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="Assets\clackr.ico" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\packs\**\*.*"
+              CopyToOutputDirectory="PreserveNewest"
+              LinkBase="packs" />
+    </ItemGroup>
 
 </Project>

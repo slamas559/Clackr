@@ -324,10 +324,10 @@ public partial class App : Application
 
     private void SetupTrayIcon()
     {
-        string? executablePath = Environment.ProcessPath;
-        _trayIconImage = executablePath == null
-            ? (Icon)SystemIcons.Application.Clone()
-            : Icon.ExtractAssociatedIcon(executablePath) ?? (Icon)SystemIcons.Application.Clone();
+        string appIconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "clackr.ico");
+        _trayIconImage = File.Exists(appIconPath)
+            ? new Icon(appIconPath)
+            : (Icon)SystemIcons.Application.Clone();
         _trayIcon = new NotifyIcon
         {
             Icon = _trayIconImage,

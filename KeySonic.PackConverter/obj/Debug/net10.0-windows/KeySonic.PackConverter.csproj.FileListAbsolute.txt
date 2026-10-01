@@ -12,6 +12,8 @@ C:\Users\AbdulSalam\KeySonic\KeySonic.PackConverter\bin\Debug\net10.0-windows\NA
 C:\Users\AbdulSalam\KeySonic\KeySonic.PackConverter\bin\Debug\net10.0-windows\NAudio.WinForms.dll
 C:\Users\AbdulSalam\KeySonic\KeySonic.PackConverter\bin\Debug\net10.0-windows\NAudio.WinMM.dll
 C:\Users\AbdulSalam\KeySonic\KeySonic.PackConverter\bin\Debug\net10.0-windows\NVorbis.dll
+C:\Users\AbdulSalam\KeySonic\KeySonic.PackConverter\bin\Debug\net10.0-windows\KeySonic.Core.dll
+C:\Users\AbdulSalam\KeySonic\KeySonic.PackConverter\bin\Debug\net10.0-windows\KeySonic.Core.pdb
 C:\Users\AbdulSalam\KeySonic\KeySonic.PackConverter\obj\Debug\net10.0-windows\KeySonic.PackConverter.csproj.AssemblyReference.cache
 C:\Users\AbdulSalam\KeySonic\KeySonic.PackConverter\obj\Debug\net10.0-windows\KeySonic.PackConverter.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\AbdulSalam\KeySonic\KeySonic.PackConverter\obj\Debug\net10.0-windows\KeySonic.PackConverter.AssemblyInfoInputs.cache
@@ -24,5 +26,3 @@ C:\Users\AbdulSalam\KeySonic\KeySonic.PackConverter\obj\Debug\net10.0-windows\re
 C:\Users\AbdulSalam\KeySonic\KeySonic.PackConverter\obj\Debug\net10.0-windows\KeySonic.PackConverter.pdb
 C:\Users\AbdulSalam\KeySonic\KeySonic.PackConverter\obj\Debug\net10.0-windows\KeySonic.PackConverter.genruntimeconfig.cache
 C:\Users\AbdulSalam\KeySonic\KeySonic.PackConverter\obj\Debug\net10.0-windows\ref\KeySonic.PackConverter.dll
-C:\Users\AbdulSalam\KeySonic\KeySonic.PackConverter\bin\Debug\net10.0-windows\KeySonic.Core.dll
-C:\Users\AbdulSalam\KeySonic\KeySonic.PackConverter\bin\Debug\net10.0-windows\KeySonic.Core.pdb
